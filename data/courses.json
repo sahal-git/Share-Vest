@@ -1,0 +1,97 @@
+[
+    {
+        "id": 1,
+        "name": "Stock Market Basics",
+        "imageCode": "FINSsC9P50Y",
+        "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
+        "category": "Beginner",
+        "enrolled": true
+    },
+    {
+        "id": 2,
+        "name": "Stock Market Basics",
+        "imageCode": "FINSsC9P50Y",
+        "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
+        "category": "Trading"
+    },
+    {
+        "id": 3,
+        "name": "Stock Market Basics",
+        "imageCode": "FINSsC9P50Y",
+        "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
+        "category": "Advanced"
+    },
+    {
+        "id": 4,
+        "name": "Stock Market Basics",
+        "imageCode": "FINSsC9P50Y",
+        "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
+        "category": "Screening"
+    },
+    {
+        "id": 5,
+        "name": "Halal Investing Guide",
+        "imageCode": "jqY2URdUDso",
+        "imageUrl": "https://i.ytimg.com/vi/jqY2URdUDso/maxresdefault.jpg",
+        "category": "Portfolio"
+    },
+    {
+        "id": 6,
+        "name": "Ultimate Stock Market Course",
+        "imageCode": "Y3kzzE9Elns",
+        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
+        "category": "Beginner"
+    },
+    {
+        "id": 7,
+        "name": "Ultimate Stock Market Course",
+        "imageCode": "Y3kzzE9Elns",
+        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
+        "category": "Trading"
+    },
+    {
+        "id": 8,
+        "name": "Ultimate Stock Market Course",
+        "imageCode": "Y3kzzE9Elns",
+        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
+        "category": "Advanced",
+        "enrolled": true
+    },
+    {
+        "id": 9,
+        "name": "Ultimate Stock Market Course",
+        "imageCode": "Y3kzzE9Elns",
+        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
+        "category": "Screening"
+    },
+    {
+        "id": 10,
+        "name": "Shariah-Compliant Stock Selection",
+        "imageCode": "H8Tyl0oBTrs",
+        "imageUrl": "https://i.ytimg.com/vi/H8Tyl0oBTrs/maxresdefault.jpg",
+        "category": "Screening",
+        "enrolled": true
+    },
+    {
+        "id": 11,
+        "name": "Halal Stock Investing",
+        "imageCode": "mZ5d604Wl4I",
+        "imageUrl": "https://i.ytimg.com/vi/mZ5d604Wl4I/maxresdefault.jpg",
+        "category": "Portfolio"
+    },
+    {
+        "id": 12,
+        "name": "Halal Stock Investing",
+        "imageCode": "mZ5d604Wl4I",
+        "imageUrl": "https://i.ytimg.com/vi/mZ5d604Wl4I/maxresdefault.jpg",
+        "category": "Advanced"
+    },
+    {
+        "id": 13,
+        "name": "Halal Stock Investing",
+        "imageCode": "mZ5d604Wl4I",
+        "imageUrl": "https://i.ytimg.com/vi/mZ5d604Wl4I/maxresdefault.jpg",
+        "category": "Screening",
+        "enrolled": true
+    }
+]
