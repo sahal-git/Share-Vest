@@ -1,14 +1,17 @@
-import { View } from 'react-native'
+import { View, Text } from 'react-native'
 import React from 'react'
-import { Slot } from 'expo-router'
+import { Stack } from 'expo-router'
 import { WatchlistProvider } from '@/context/WatchlistContext';
-import { ProfileProvider } from '@/context/ProfileProvider';
+import { ProfileProvider } from '@/context/ProfileContext';
 
-export default function RootLayout() {
+export default function _layout() {
   return (
     <ProfileProvider>
       <WatchlistProvider>
-        <Slot />
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+        </Stack>
       </WatchlistProvider>
     </ProfileProvider>
   )

@@ -4,7 +4,7 @@ import Colors from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useProfile } from '@/context/ProfileProvider';
+import { useProfile } from '@/context/ProfileContext';
 
 export default function Header() {
   const router = useRouter();
@@ -15,11 +15,7 @@ export default function Header() {
       <View style={styles.wrapper}>
         <View style={styles.userInfoWrapper}>
           <Image
-            source={{ 
-              uri: profile.avatar.startsWith('data:') 
-                ? profile.avatar 
-                : "https://i.pravatar.cc/150?img=56" 
-            }}
+            source={{ uri: profile.avatar }}
             style={styles.userImg}
           />
 

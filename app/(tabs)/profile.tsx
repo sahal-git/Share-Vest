@@ -6,37 +6,20 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect } from "react";
+import React from "react";
 import Colors from "@/constants/Colors";
 import { Stack } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useProfile } from '@/context/ProfileProvider';
+import { useProfile } from '@/context/ProfileContext';
 import { useWatchlist } from '@/context/WatchlistContext';
 import CourseList from "@/data/courses.json";
 import { CourseType } from "@/types";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Profile() {
   const router = useRouter();
-  const { profile, loadProfile } = useProfile();
+  const { profile } = useProfile();
   const { watchlist } = useWatchlist();
-  
-  const handleLogout = async () => {
-    try {
-      // Clear profile data
-      await AsyncStorage.removeItem('profileData');
-      // Keep userData for future logins
-      router.replace('/(auth)/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-      alert('Failed to logout');
-    }
-  };
-  
-  useEffect(() => {
-    loadProfile();
-  }, []);
   
   // Get enrolled courses count
   const enrolledCoursesCount = CourseList.filter((course: CourseType) => 
@@ -61,11 +44,7 @@ export default function Profile() {
             <View style={styles.profileHeader}>
               <View style={styles.imageContainer}>
                 <Image
-                  source={{ 
-                    uri: profile.avatar.startsWith('data:') 
-                      ? profile.avatar 
-                      : "https://i.pravatar.cc/150?img=56" 
-                  }}
+                  source={{ uri: profile.avatar }}
                   style={styles.profileImage}
                 />
                 <View style={styles.imageOverlay} />
@@ -167,10 +146,7 @@ export default function Profile() {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.menuItem, styles.logoutButton]}
-              onPress={handleLogout}
-            >
+            <TouchableOpacity style={[styles.menuItem, styles.logoutButton]}>
               <View style={styles.menuLeft}>
                 <MaterialCommunityIcons
                   name="logout"

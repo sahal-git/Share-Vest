@@ -139,7 +139,7 @@ const CourseCard = ({ course }: { course: any }) => {
   return (
     <TouchableOpacity 
       style={styles.courseCard}
-      onPress={() => router.push('../(screens)/CourseWatch')}
+      onPress={() => router.push('/(screens)/video')}
     >
       <View style={styles.thumbnailContainer}>
         <Image source={{ uri: course.imageUrl }} style={styles.thumbnail} />

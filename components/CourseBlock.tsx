@@ -52,7 +52,7 @@ export default function CourseBlock({
           borderRadius: 10,
           marginRight: 15,
         }}
-        onPress={() => router.push('/(screens)/CourseWatch')}
+        onPress={() => router.push('/(screens)/video')}
       >
         <View style={styles.courseContainer}>
           {showTags && item.featured && <FeaturedTag />}

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Colors from "@/constants/Colors";
 import { Stack, useRouter } from "expo-router";
 import SubScreenHeader from "@/components/SubScreenHeader";
-import { useProfile } from '@/context/ProfileProvider';
+import { useProfile } from '@/context/ProfileContext';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -13,43 +13,28 @@ export default function EditProfile() {
   const [formData, setFormData] = useState(profile);
 
   const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to change your profile picture!');
-        return;
-      }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to change your profile picture!');
+      return;
+    }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.5,
-        base64: true,
-      });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
 
-      if (!result.canceled && result.assets[0].base64) {
-        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        setFormData(prev => ({ ...prev, avatar: base64Image }));
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      alert('Failed to pick image');
+    if (!result.canceled) {
+      setFormData(prev => ({ ...prev, avatar: result.assets[0].uri }));
     }
   };
 
-  const handleSave = async () => {
-    try {
-      if (!formData.name.trim()) {
-        alert('Name is required');
-        return;
-      }
-      await updateProfile(formData);
-      router.back();
-    } catch (error) {
-      alert('Failed to update profile');
-    }
+  const handleSave = () => {
+    updateProfile(formData);
+    router.back();
   };
 
   return (
