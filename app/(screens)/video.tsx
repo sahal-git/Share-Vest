@@ -5,29 +5,53 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Platform,
 } from "react-native";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Colors from "@/constants/Colors";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Video, ResizeMode } from "expo-av";
+import { ResizeMode } from "expo-av";
+import VideoPlayer from "expo-video-player";
 import CourseList from "@/data/courses.json";
-import { useCourses } from '@/context/CourseContext';
+import { useCourses } from "@/context/CourseContext";
+
+type Chapter = {
+  id: number;
+  title: string;
+  videoUrl: string;
+}
 
 export default function VideoScreen() {
   const router = useRouter();
-  const videoRef = useRef(null);
-  const { id, chapter: chapterId } = useLocalSearchParams<{ 
+  const { id, chapter: chapterId } = useLocalSearchParams<{
     id: string;
     chapter: string;
   }>();
   const { isEnrolled } = useCourses();
+  const [isPortrait, setIsPortrait] = useState(true);
+  const [currentVideoId, setCurrentVideoId] = useState(Number(chapterId));
 
   // Find the course and current chapter
   const course = CourseList.find((c) => c.id === Number(id));
   const currentChapter = course?.chapters?.find(
-    (ch) => ch.id === Number(chapterId)
+    (ch) => ch.id === currentVideoId
   );
+
+  // Memoize the chapter change handler
+  const handleChapterPress = useCallback((nextChapterId: number) => {
+    const nextChapter = course?.chapters?.find(ch => ch.id === nextChapterId);
+    if (nextChapter) {
+      setCurrentVideoId(nextChapterId);
+      // Update URL without triggering navigation
+      router.setParams({ chapter: nextChapterId.toString() }, { replace: true });
+    }
+  }, [course, router]);
+
+  // Handle back navigation
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
 
   useEffect(() => {
     // Check if user is enrolled
@@ -46,29 +70,30 @@ export default function VideoScreen() {
     );
   }
 
-  const handleChapterPress = (nextChapterId: number) => {
-    router.replace({
-      pathname: "/(screens)/video",
-      params: { id: course.id, chapter: nextChapterId }
-    });
-  };
-
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Video Player */}
       <View style={styles.videoContainer}>
-        <Video
-          ref={videoRef}
-          style={styles.video}
-          source={{
-            uri: "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4", // Replace with actual video URL
+        <VideoPlayer
+          videoProps={{
+            shouldPlay: true,
+            resizeMode: ResizeMode.CONTAIN,
+            source: {
+              uri: currentChapter.videoUrl,
+            },
           }}
-          useNativeControls
-          resizeMode={ResizeMode.CONTAIN}
-          isLooping={false}
-          shouldPlay
+          style={{
+            videoBackgroundColor: 'black',
+            height: undefined,
+            width: undefined,
+          }}
+          slider={{
+            visible: true,
+          }}
+          timeVisible={true}
+          defaultControlsVisible={true}
         />
       </View>
 
@@ -76,14 +101,14 @@ export default function VideoScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Chapter Title */}
         <View style={styles.chapterHeader}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={handleBack}
           >
-            <MaterialCommunityIcons 
-              name="arrow-left" 
-              size={24} 
-              color={Colors.white} 
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={24}
+              color={Colors.white}
             />
           </TouchableOpacity>
           <View style={styles.titleContainer}>
@@ -106,14 +131,23 @@ export default function VideoScreen() {
             >
               <View style={styles.chapterInfo}>
                 <MaterialCommunityIcons
-                  name={chapter.id === currentChapter.id ? "play-circle" : "play-circle-outline"}
+                  name={
+                    chapter.id === currentChapter.id
+                      ? "play-circle"
+                      : "play-circle-outline"
+                  }
                   size={24}
-                  color={chapter.id === currentChapter.id ? Colors.tintColor : Colors.white}
+                  color={
+                    chapter.id === currentChapter.id
+                      ? Colors.tintColor
+                      : Colors.white
+                  }
                 />
-                <Text 
+                <Text
                   style={[
                     styles.chapterText,
-                    chapter.id === currentChapter.id && styles.activeChapterText
+                    chapter.id === currentChapter.id &&
+                      styles.activeChapterText,
                   ]}
                 >
                   {chapter.title}
@@ -126,7 +160,6 @@ export default function VideoScreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
