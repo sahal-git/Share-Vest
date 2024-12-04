@@ -16,12 +16,6 @@ import VideoPlayer from "expo-video-player";
 import CourseList from "@/data/courses.json";
 import { useCourses } from "@/context/CourseContext";
 
-type Chapter = {
-  id: number;
-  title: string;
-  videoUrl: string;
-}
-
 export default function VideoScreen() {
   const router = useRouter();
   const { id, chapter: chapterId } = useLocalSearchParams<{
@@ -30,33 +24,20 @@ export default function VideoScreen() {
   }>();
   const { isEnrolled } = useCourses();
   const [isPortrait, setIsPortrait] = useState(true);
-  const [currentVideoId, setCurrentVideoId] = useState(Number(chapterId));
 
   // Find the course and current chapter
   const course = CourseList.find((c) => c.id === Number(id));
   const currentChapter = course?.chapters?.find(
-    (ch) => ch.id === currentVideoId
+    (ch) => ch.id === Number(chapterId)
   );
-
-  // Memoize the chapter change handler
-  const handleChapterPress = useCallback((nextChapterId: number) => {
-    const nextChapter = course?.chapters?.find(ch => ch.id === nextChapterId);
-    if (nextChapter) {
-      setCurrentVideoId(nextChapterId);
-      // Update URL without triggering navigation
-      router.setParams({ chapter: nextChapterId.toString() }, { replace: true });
-    }
-  }, [course, router]);
-
-  // Handle back navigation
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
 
   useEffect(() => {
     // Check if user is enrolled
     if (course && !isEnrolled(course.id)) {
-      router.replace(`/(screens)/enroll?id=${course.id}`);
+      router.push({
+        pathname: '/(screens)/enroll',
+        params: { id: course.id.toString() }
+      });
     }
   }, [course, id]);
 
@@ -70,6 +51,14 @@ export default function VideoScreen() {
     );
   }
 
+  const handleChapterPress = useCallback((nextChapterId: number) => {
+    // Instead of using router.push, we'll update the URL without a full reload
+    router.setParams({ 
+      id: course?.id.toString(), 
+      chapter: nextChapterId.toString() 
+    });
+  }, [course, router]);
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -77,11 +66,12 @@ export default function VideoScreen() {
       {/* Video Player */}
       <View style={styles.videoContainer}>
         <VideoPlayer
+          key={currentChapter?.id} // Add key to force player reload when chapter changes
           videoProps={{
             shouldPlay: true,
             resizeMode: ResizeMode.CONTAIN,
             source: {
-              uri: currentChapter.videoUrl,
+              uri: currentChapter?.videoUrl || "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4",
             },
           }}
           style={{
@@ -103,7 +93,7 @@ export default function VideoScreen() {
         <View style={styles.chapterHeader}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={handleBack}
+            onPress={() => router.back()}
           >
             <MaterialCommunityIcons
               name="arrow-left"
