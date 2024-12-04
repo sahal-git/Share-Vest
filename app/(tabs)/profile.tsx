@@ -8,11 +8,11 @@ import {
 } from "react-native";
 import React from "react";
 import Colors from "@/constants/Colors";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { useProfile } from '@/context/ProfileContext';
 import { useWatchlist } from '@/context/WatchlistContext';
+import { useCourses } from "@/context/CourseContext";
 import CourseList from "@/data/courses.json";
 import { CourseType } from "@/types";
 
@@ -20,18 +20,17 @@ export default function Profile() {
   const router = useRouter();
   const { profile } = useProfile();
   const { watchlist } = useWatchlist();
+  const { enrolledCourses } = useCourses();
   
-  // Get enrolled courses count
-  const enrolledCoursesCount = CourseList.filter((course: CourseType) => 
-    course.enrolled
-  ).length;
+  // Get enrolled courses count directly from context
+  const enrolledCoursesCount = enrolledCourses.length;
   
   // Get watchlist count
   const watchlistCount = watchlist.length;
   
-  // Get certificates count
-  const certificatesCount = CourseList.filter((course: CourseType) => 
-    course.enrolled && course.completed
+  // Get certificates count - courses that are both enrolled and completed
+  const certificatesCount = CourseList.filter((course) => 
+    enrolledCourses.includes(course.id) && course.completed
   ).length;
 
   return (
@@ -54,36 +53,21 @@ export default function Profile() {
                 <Text style={styles.email}>{profile.email}</Text>
               </View>
             </View>
-          </View>
 
-          {/* Stats Cards */}
-          <View style={styles.statsGrid}>
-            <View style={styles.statsCard}>
-              <MaterialCommunityIcons
-                name="book-education"
-                size={24}
-                color={Colors.tintColor}
-              />
-              <Text style={styles.statsNumber}>{enrolledCoursesCount}</Text>
-              <Text style={styles.statsLabel}>Enrolled Courses</Text>
-            </View>
-            <View style={styles.statsCard}>
-              <MaterialCommunityIcons
-                name="chart-line"
-                size={24}
-                color={Colors.tintColor}
-              />
-              <Text style={styles.statsNumber}>{watchlistCount}</Text>
-              <Text style={styles.statsLabel}>Watchlist Stocks</Text>
-            </View>
-            <View style={styles.statsCard}>
-              <MaterialCommunityIcons
-                name="certificate"
-                size={24}
-                color={Colors.tintColor}
-              />
-              <Text style={styles.statsNumber}>{certificatesCount}</Text>
-              <Text style={styles.statsLabel}>Certificates</Text>
+            {/* Stats Section */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{enrolledCoursesCount}</Text>
+                <Text style={styles.statLabel}>Enrolled Courses</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{watchlistCount}</Text>
+                <Text style={styles.statLabel}>Watchlist</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{certificatesCount}</Text>
+                <Text style={styles.statLabel}>Certificates</Text>
+              </View>
             </View>
           </View>
 
@@ -215,27 +199,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
-  statsGrid: {
+  statsContainer: {
     flexDirection: "row",
-    flexWrap: "wrap",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     marginTop: 20,
   },
-  statsCard: {
+  statItem: {
     backgroundColor: Colors.gray,
     width: "31%",
     padding: 15,
     borderRadius: 15,
     alignItems: "center",
   },
-  statsNumber: {
+  statNumber: {
     color: Colors.white,
     fontSize: 20,
     fontWeight: "600",
     marginTop: 8,
   },
-  statsLabel: {
+  statLabel: {
     color: Colors.white,
     opacity: 0.7,
     fontSize: 12,

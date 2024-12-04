@@ -12,6 +12,8 @@ import Colors from "@/constants/Colors";
 import { router, Stack, useRouter } from "expo-router";
 import CourseList from "@/data/courses.json";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { CourseType } from "@/types";
+import { useCourses } from "@/context/CourseContext";
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,17 +135,18 @@ export default function Page() {
   );
 }
 
-const CourseCard = ({ course }: { course: any }) => {
+const CourseCard = ({ course }: { course: CourseType }) => {
   const router = useRouter();
+  const { isEnrolled } = useCourses();
   
   return (
     <TouchableOpacity 
       style={styles.courseCard}
-      onPress={() => router.push('/(screens)/video')}
+      onPress={() => router.push(`/(screens)/enroll?id=${course.id}`)}
     >
       <View style={styles.thumbnailContainer}>
         <Image source={{ uri: course.imageUrl }} style={styles.thumbnail} />
-        {course.enrolled && (
+        {isEnrolled(course.id) && (
           <View style={styles.enrolledBadge}>
             <MaterialCommunityIcons
               name="check-circle"
@@ -172,9 +175,16 @@ const CourseCard = ({ course }: { course: any }) => {
           />
         </View>
         <View style={styles.courseDetails}>
-          <Text style={styles.courseTitle} numberOfLines={2}>
-            {course.name}
-          </Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.courseTitle} numberOfLines={2}>
+              {course.name}
+            </Text>
+            {isEnrolled(course.id) && (
+              <View style={styles.enrolledTag}>
+                <Text style={styles.enrolledText}>Enrolled</Text>
+              </View>
+            )}
+          </View>
           <View style={styles.courseFooter}>
             <Text style={styles.categoryText}>{course.category}</Text>
             {course.duration && (
@@ -327,5 +337,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginLeft: 8,
     marginRight: 8,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  enrolledTag: {
+    backgroundColor: Colors.tintColor,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  enrolledText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

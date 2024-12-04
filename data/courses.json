@@ -5,93 +5,103 @@
         "imageCode": "FINSsC9P50Y",
         "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
         "category": "Beginner",
-        "enrolled": true
+        "enrolled": true,
+        "chapters": [
+            { "id": 1, "title": "Stock Market Terminology" },
+            { "id": 2, "title": "Basics of Stock Investing" },
+            { "id": 3, "title": "Understanding Market Trends" },
+            { "id": 4, "title": "Types of Stocks" },
+            { "id": 5, "title": "Risk Management in Stocks" },
+            { "id": 6, "title": "Key Financial Metrics" },
+            { "id": 7, "title": "How Stock Prices are Determined" },
+            { "id": 8, "title": "Introduction to Stock Market" }
+        ]
     },
     {
         "id": 2,
-        "name": "Stock Market Basics",
-        "imageCode": "FINSsC9P50Y",
-        "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
-        "category": "Trading"
+        "name": "Halal Investing Guide",
+        "imageCode": "jqY2URdUDso",
+        "imageUrl": "https://i.ytimg.com/vi/jqY2URdUDso/maxresdefault.jpg",
+        "category": "Portfolio",
+        "chapters": [
+            { "id": 1, "title": "Screening Halal Stocks" },
+            { "id": 2, "title": "Ethical Considerations in Investing" },
+            { "id": 3, "title": "Halal Investment Options" },
+            { "id": 4, "title": "Shariah Principles in Finance" },
+            { "id": 5, "title": "Introduction to Halal Investing" },
+            { "id": 6, "title": "Halal Mutual Funds and ETFs" },
+            { "id": 7, "title": "Building a Halal Portfolio" },
+            { "id": 8, "title": "Risk Management in Halal Investing" }
+        ]
     },
     {
         "id": 3,
-        "name": "Stock Market Basics",
-        "imageCode": "FINSsC9P50Y",
-        "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
-        "category": "Advanced"
+        "name": "Ultimate Stock Market Course",
+        "imageCode": "Y3kzzE9Elns",
+        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
+        "category": "Advanced",
+        "enrolled": true,
+        "chapters": [
+            { "id": 1, "title": "Stock Valuation Models" },
+            { "id": 2, "title": "Global Market Impact on Stocks" },
+            { "id": 3, "title": "Options Trading Strategies" },
+            { "id": 4, "title": "Earnings Report Analysis" },
+            { "id": 5, "title": "Understanding Financial Statements" },
+            { "id": 6, "title": "Sector Rotation Strategies" },
+            { "id": 7, "title": "Advanced Stock Valuation Techniques" },
+            { "id": 8, "title": "Algorithmic Trading Introduction" }
+        ]
     },
     {
         "id": 4,
         "name": "Stock Market Basics",
         "imageCode": "FINSsC9P50Y",
         "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
-        "category": "Screening"
+        "category": "Trading",
+        "chapters": [
+            { "id": 1, "title": "Trading Psychology" },
+            { "id": 2, "title": "Common Trading Mistakes" },
+            { "id": 3, "title": "Risk Management in Trading" },
+            { "id": 4, "title": "Setting Up a Trading Account" },
+            { "id": 5, "title": "Technical Analysis Basics" },
+            { "id": 6, "title": "Types of Trading Strategies" },
+            { "id": 7, "title": "Understanding Candlestick Charts" },
+            { "id": 8, "title": "Introduction to Trading" }
+        ]
     },
     {
         "id": 5,
-        "name": "Halal Investing Guide",
-        "imageCode": "jqY2URdUDso",
-        "imageUrl": "https://i.ytimg.com/vi/jqY2URdUDso/maxresdefault.jpg",
-        "category": "Portfolio"
+        "name": "Ultimate Stock Market Course",
+        "imageCode": "Y3kzzE9Elns",
+        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
+        "category": "Beginner",
+        "chapters": [
+            { "id": 1, "title": "Stock Market Fundamentals" },
+            { "id": 2, "title": "Preparing for Long-term Investing" },
+            { "id": 3, "title": "Introduction to Stock Indices" },
+            { "id": 4, "title": "Market Participants Overview" },
+            { "id": 5, "title": "Basics of Order Types" },
+            { "id": 6, "title": "Common Stock Investing Myths" },
+            { "id": 7, "title": "Risks in Stock Market Investing" },
+            { "id": 8, "title": "How to Open a Brokerage Account" }
+        ]
     },
     {
         "id": 6,
-        "name": "Ultimate Stock Market Course",
-        "imageCode": "Y3kzzE9Elns",
-        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
-        "category": "Beginner"
-    },
-    {
-        "id": 7,
-        "name": "Ultimate Stock Market Course",
-        "imageCode": "Y3kzzE9Elns",
-        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
-        "category": "Trading"
-    },
-    {
-        "id": 8,
-        "name": "Ultimate Stock Market Course",
-        "imageCode": "Y3kzzE9Elns",
-        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
-        "category": "Advanced",
-        "enrolled": true
-    },
-    {
-        "id": 9,
-        "name": "Ultimate Stock Market Course",
-        "imageCode": "Y3kzzE9Elns",
-        "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
-        "category": "Screening"
-    },
-    {
-        "id": 10,
-        "name": "Shariah-Compliant Stock Selection",
-        "imageCode": "H8Tyl0oBTrs",
-        "imageUrl": "https://i.ytimg.com/vi/H8Tyl0oBTrs/maxresdefault.jpg",
-        "category": "Screening",
-        "enrolled": true
-    },
-    {
-        "id": 11,
-        "name": "Halal Stock Investing",
-        "imageCode": "mZ5d604Wl4I",
-        "imageUrl": "https://i.ytimg.com/vi/mZ5d604Wl4I/maxresdefault.jpg",
-        "category": "Portfolio"
-    },
-    {
-        "id": 12,
-        "name": "Halal Stock Investing",
-        "imageCode": "mZ5d604Wl4I",
-        "imageUrl": "https://i.ytimg.com/vi/mZ5d604Wl4I/maxresdefault.jpg",
-        "category": "Advanced"
-    },
-    {
-        "id": 13,
         "name": "Halal Stock Investing",
         "imageCode": "mZ5d604Wl4I",
         "imageUrl": "https://i.ytimg.com/vi/mZ5d604Wl4I/maxresdefault.jpg",
         "category": "Screening",
-        "enrolled": true
+        "enrolled": true,
+        "chapters": [
+            { "id": 1, "title": "Sector-specific Screening" },
+            { "id": 2, "title": "Screening for Dividend Stocks" },
+            { "id": 3, "title": "Risk-based Screening" },
+            { "id": 4, "title": "Growth vs Value Screening" },
+            { "id": 5, "title": "Using Screening Tools" },
+            { "id": 6, "title": "Key Screening Metrics" },
+            { "id": 7, "title": "Introduction to Stock Screening" },
+            { "id": 8, "title": "Developing Custom Screens" }
+        ]
     }
 ]

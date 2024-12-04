@@ -15,6 +15,12 @@ export interface CourseType {
   featured?: boolean;
   duration?: string;
   completed?: boolean;
+  chapters?: ChapterType[];
+}
+
+export interface ChapterType {
+  id: number;
+  title: string;
 }
 
 interface NewsItem {

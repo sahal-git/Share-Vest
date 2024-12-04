@@ -1,146 +1,124 @@
-import { StyleSheet, Text, View, Dimensions, ScrollView, TouchableOpacity } from "react-native";
-import React from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
+import React, { useEffect, useRef } from "react";
 import Colors from "@/constants/Colors";
-import { Stack } from "expo-router";
-import { Video, ResizeMode } from 'expo-av';
-import SubScreenHeader from "@/components/SubScreenHeader";
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
-
-interface Chapter {
-  id: number;
-  title: string;
-  duration: string;
-  isCompleted: boolean;
-}
-
-interface CourseDetails {
-  title: string;
-  instructor: string;
-  totalDuration: string;
-  totalChapters: number;
-  completedChapters: number;
-  description: string;
-  chapters: Chapter[];
-}
-
-const courseDetails: CourseDetails = {
-  title: "Introduction to Islamic Finance",
-  instructor: "Dr. Ahmed Khan",
-  totalDuration: "4h 30m",
-  totalChapters: 12,
-  completedChapters: 3,
-  description: "Learn the fundamentals of Islamic finance and investment principles. This comprehensive course covers Shariah-compliant investment strategies, understanding halal stocks, and ethical investment practices.",
-  chapters: [
-    {
-      id: 1,
-      title: "Introduction to Islamic Finance Principles",
-      duration: "15:30",
-      isCompleted: true
-    },
-    {
-      id: 2,
-      title: "Understanding Shariah Compliance",
-      duration: "20:45",
-      isCompleted: true
-    },
-    {
-      id: 3,
-      title: "Halal Investment Strategies",
-      duration: "25:15",
-      isCompleted: true
-    },
-    {
-      id: 4,
-      title: "Stock Screening Methods",
-      duration: "18:20",
-      isCompleted: false
-    },
-    // Add more chapters...
-  ]
-};
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Video, ResizeMode } from "expo-av";
+import CourseList from "@/data/courses.json";
+import { useCourses } from '@/context/CourseContext';
 
 export default function VideoScreen() {
-  const video = React.useRef(null);
-  const [activeChapter, setActiveChapter] = React.useState(courseDetails.chapters[0]);
+  const router = useRouter();
+  const videoRef = useRef(null);
+  const { id, chapter: chapterId } = useLocalSearchParams<{ 
+    id: string;
+    chapter: string;
+  }>();
+  const { isEnrolled } = useCourses();
+
+  // Find the course and current chapter
+  const course = CourseList.find((c) => c.id === Number(id));
+  const currentChapter = course?.chapters?.find(
+    (ch) => ch.id === Number(chapterId)
+  );
+
+  useEffect(() => {
+    // Check if user is enrolled
+    if (course && !isEnrolled(course.id)) {
+      router.replace(`/(screens)/enroll?id=${course.id}`);
+    }
+  }, [course, id]);
+
+  if (!course || !currentChapter) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Content not found</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const handleChapterPress = (nextChapterId: number) => {
+    router.replace({
+      pathname: "/(screens)/video",
+      params: { id: course.id, chapter: nextChapterId }
+    });
+  };
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <SubScreenHeader title={courseDetails.title} />
-      
-      <Video
-        ref={video}
-        style={styles.video}
-        source={{
-          uri: 'https://cdn.pixabay.com/video/2024/03/15/204306-923909642_large.mp4'
-        }}
-        useNativeControls
-        resizeMode={ResizeMode.CONTAIN}
-        isLooping
-        shouldPlay
-      />
 
-      <ScrollView style={styles.content}>
-        {/* Course Progress */}
-        <View style={styles.progressSection}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressTitle}>Course Progress</Text>
-            <Text style={styles.progressText}>
-              {courseDetails.completedChapters}/{courseDetails.totalChapters} Chapters
-            </Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${(courseDetails.completedChapters/courseDetails.totalChapters) * 100}%` }
-              ]} 
+      {/* Video Player */}
+      <View style={styles.videoContainer}>
+        <Video
+          ref={videoRef}
+          style={styles.video}
+          source={{
+            uri: "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4", // Replace with actual video URL
+          }}
+          useNativeControls
+          resizeMode={ResizeMode.CONTAIN}
+          isLooping={false}
+          shouldPlay
+        />
+      </View>
+
+      {/* Content */}
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Chapter Title */}
+        <View style={styles.chapterHeader}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <MaterialCommunityIcons 
+              name="arrow-left" 
+              size={24} 
+              color={Colors.white} 
             />
+          </TouchableOpacity>
+          <View style={styles.titleContainer}>
+            <Text style={styles.courseTitle}>{course.name}</Text>
+            <Text style={styles.chapterTitle}>{currentChapter.title}</Text>
           </View>
         </View>
 
-        {/* Course Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="clock-outline" size={20} color={Colors.white} />
-            <Text style={styles.infoText}>{courseDetails.totalDuration}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="book-outline" size={20} color={Colors.white} />
-            <Text style={styles.infoText}>{courseDetails.totalChapters} Chapters</Text>
-          </View>
-        </View>
-
-        {/* Chapters */}
-        <View style={styles.chaptersSection}>
-          <Text style={styles.sectionTitle}>Chapters</Text>
-          {courseDetails.chapters.map((chapter) => (
-            <TouchableOpacity 
+        {/* Chapters List */}
+        <View style={styles.chaptersContainer}>
+          <Text style={styles.sectionTitle}>Course Content</Text>
+          {course.chapters.map((chapter) => (
+            <TouchableOpacity
               key={chapter.id}
               style={[
-                styles.chapterItem,
-                activeChapter.id === chapter.id && styles.activeChapter
+                styles.chapterCard,
+                chapter.id === currentChapter.id && styles.activeChapter,
               ]}
-              onPress={() => setActiveChapter(chapter)}
+              onPress={() => handleChapterPress(chapter.id)}
             >
-              <View style={styles.chapterLeft}>
-                {chapter.isCompleted ? (
-                  <MaterialCommunityIcons name="check-circle" size={24} color={Colors.tintColor} />
-                ) : (
-                  <View style={styles.chapterNumber}>
-                    <Text style={styles.chapterNumberText}>{chapter.id}</Text>
-                  </View>
-                )}
-                <View style={styles.chapterInfo}>
-                  <Text style={styles.chapterTitle}>{chapter.title}</Text>
-                  <Text style={styles.chapterDuration}>{chapter.duration}</Text>
-                </View>
+              <View style={styles.chapterInfo}>
+                <MaterialCommunityIcons
+                  name={chapter.id === currentChapter.id ? "play-circle" : "play-circle-outline"}
+                  size={24}
+                  color={chapter.id === currentChapter.id ? Colors.tintColor : Colors.white}
+                />
+                <Text 
+                  style={[
+                    styles.chapterText,
+                    chapter.id === currentChapter.id && styles.activeChapterText
+                  ]}
+                >
+                  {chapter.title}
+                </Text>
               </View>
-              {activeChapter.id === chapter.id && (
-                <MaterialCommunityIcons name="play-circle" size={24} color={Colors.tintColor} />
-              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -154,191 +132,88 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.black,
   },
-  videoWrapper: {
-    width: width,
-    aspectRatio: 16/9,
-    backgroundColor: '#000',
+  videoContainer: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    backgroundColor: "#000",
   },
   video: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   content: {
     flex: 1,
-    padding: 16,
   },
-  videoInfo: {
-    marginBottom: 16,
+  chapterHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 20,
+    gap: 15,
   },
-  title: {
-    color: Colors.white,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  stats: {
-    color: Colors.white,
-    opacity: 0.7,
-    fontSize: 14,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: Colors.gray,
-    marginBottom: 16,
-  },
-  actionButton: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  actionText: {
-    color: Colors.white,
-    fontSize: 12,
-  },
-  instructorSection: {
-    marginBottom: 16,
-  },
-  instructorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  instructorAvatar: {
+  backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.tintColor,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: Colors.gray,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  avatarText: {
-    color: Colors.white,
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  instructorInfo: {
+  titleContainer: {
     flex: 1,
   },
-  instructorName: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  instructorTitle: {
+  courseTitle: {
     color: Colors.white,
     opacity: 0.7,
     fontSize: 14,
+    marginBottom: 4,
   },
-  descriptionSection: {
-    paddingTop: 16,
-  },
-  description: {
+  chapterTitle: {
     color: Colors.white,
-    opacity: 0.7,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 18,
+    fontWeight: "600",
   },
-  progressSection: {
-    padding: 16,
-    backgroundColor: Colors.gray,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  progressTitle: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  progressText: {
-    color: Colors.white,
-    opacity: 0.7,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 2,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.tintColor,
-    borderRadius: 2,
-  },
-  infoSection: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 24,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  infoText: {
-    color: Colors.white,
-    opacity: 0.7,
+  chaptersContainer: {
+    padding: 20,
   },
   sectionTitle: {
     color: Colors.white,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
   },
-  chaptersSection: {
-    marginBottom: 24,
-  },
-  chapterItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  chapterCard: {
     padding: 16,
-    backgroundColor: Colors.gray,
     borderRadius: 12,
     marginBottom: 8,
+    backgroundColor: Colors.gray,
   },
   activeChapter: {
-    backgroundColor: Colors.tintColor + '20',
+    backgroundColor: Colors.gray + "80",
     borderColor: Colors.tintColor,
     borderWidth: 1,
   },
-  chapterLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  chapterNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chapterNumberText: {
-    color: Colors.white,
-    fontSize: 12,
-    fontWeight: '600',
-  },
   chapterInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  chapterText: {
+    color: Colors.white,
+    fontSize: 15,
     flex: 1,
   },
-  chapterTitle: {
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
+  activeChapterText: {
+    color: Colors.tintColor,
+    fontWeight: "500",
   },
-  chapterDuration: {
+  errorContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
     color: Colors.white,
+    fontSize: 16,
     opacity: 0.7,
-    fontSize: 12,
   },
-}); 
+});

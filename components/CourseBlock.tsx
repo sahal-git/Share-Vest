@@ -10,10 +10,9 @@ import {
 import React from "react";
 import Colors from "@/constants/Colors";
 import { CourseType } from "@/types";
-import { LinearGradient } from 'expo-linear-gradient';
-import FeaturedTag from './FeaturedTag';
-import VideoDurationTag from './VideoDurationTag';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useCourses } from '@/context/CourseContext';
 
 export default function CourseBlock({
   text,
@@ -31,10 +30,11 @@ export default function CourseBlock({
   showTags?: boolean;
 }) {
   const router = useRouter();
+  const { isEnrolled } = useCourses();
 
   const filteredCourses = courseList.filter((course) => {
     if (text === "Your") {
-      return course.enrolled;
+      return isEnrolled(course.id);
     }
     if (category) {
       return course.category === category;
@@ -45,35 +45,54 @@ export default function CourseBlock({
   const renderItem: ListRenderItem<CourseType> = ({ item }) => {
     return (
       <TouchableOpacity
-        style={{
-          flex: 1,
-          width: 240,
-          height: 135,
-          borderRadius: 10,
-          marginRight: 15,
-        }}
-        onPress={() => router.push('/(screens)/video')}
+        style={styles.courseCard}
+        onPress={() => router.push(`/(screens)/enroll?id=${item.id}`)}
       >
-        <View style={styles.courseContainer}>
-          {showTags && item.featured && <FeaturedTag />}
-          <Image
-            source={{ uri: item.imageUrl }}
-            style={styles.courseImage}
-          />
-          {item.duration && <VideoDurationTag duration={item.duration} />}
-          {showEnrolled && item.enrolled && (
-            <View style={styles.enrolledTag}>
-              <Text style={styles.enrolledText}>Enrolled</Text>
+        <View style={styles.thumbnailContainer}>
+          <Image source={{ uri: item.imageUrl }} style={styles.thumbnail} />
+          {showEnrolled && isEnrolled(item.id) && (
+            <View style={styles.enrolledBadge}>
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={14}
+                color={Colors.white}
+              />
             </View>
           )}
+        </View>
+        <View style={styles.courseInfo}>
+          <View style={styles.courseIcon}>
+            <MaterialCommunityIcons
+              name={
+                item.category === "Beginner" ? "school" :
+                item.category === "Advanced" ? "chart-line" :
+                item.category === "Trading" ? "trending-up" :
+                item.category === "Portfolio" ? "briefcase" :
+                "filter" // for Screening
+              }
+              size={24}
+              color={Colors.white}
+            />
+          </View>
+          <View style={styles.courseDetails}>
+            <Text style={styles.courseTitle} numberOfLines={2}>
+              {item.name}
+            </Text>
+            <View style={styles.courseFooter}>
+              <Text style={styles.categoryText}>{item.category}</Text>
+              {item.duration && (
+                <Text style={styles.durationText}>{item.duration}</Text>
+              )}
+            </View>
+          </View>
         </View>
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={{ gap: 15, marginTop: 15 }}>
-      <Text style={{ color: Colors.white, fontSize: 16 }}>
+    <View style={styles.container}>
+      <Text style={styles.headerText}>
         {text}{" "}
         {textBold && <Text style={{ fontWeight: "bold" }}>{textBold}</Text>}
       </Text>
@@ -82,56 +101,81 @@ export default function CourseBlock({
         renderItem={renderItem}
         horizontal
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  courseContainer: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.gray,
-    overflow: "hidden",
-    position: "relative",
+  container: {
+    gap: 15,
+    marginTop: 15,
   },
-  courseImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 10,
-  },
-  gradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-    justifyContent: 'flex-end',
-    paddingBottom: 10,
-    paddingHorizontal: 10,
-  },
-  courseTitle: {
+  headerText: {
     color: Colors.white,
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 16,
   },
-  enrolledTag: {
+  listContent: {
+    paddingRight: 20,
+  },
+  courseCard: {
+    width: 280,
+    marginLeft: 20,
+  },
+  thumbnailContainer: {
+    position: "relative",
+    width: "100%",
+    height: 160,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
+  },
+  enrolledBadge: {
     position: "absolute",
     top: 10,
     right: 10,
     backgroundColor: Colors.tintColor,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 5,
-    zIndex: 1,
+    padding: 4,
+    borderRadius: 12,
   },
-  enrolledText: {
+  courseInfo: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  courseIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.gray,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  courseDetails: {
+    flex: 1,
+  },
+  courseTitle: {
     color: Colors.white,
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "500",
+    marginBottom: 6,
+  },
+  courseFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  categoryText: {
+    color: Colors.tintColor,
+    fontSize: 13,
+  },
+  durationText: {
+    color: "#999",
+    fontSize: 13,
   },
 });
