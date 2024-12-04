@@ -28,7 +28,9 @@
       }
     },
     "plugins": [
-      "expo-video"
+      "expo-video",
+      "react-native-video",
+      "expo-splash-screen"
     ]
   }
 }

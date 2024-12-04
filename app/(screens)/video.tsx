@@ -7,23 +7,28 @@ import {
   Dimensions,
   Platform,
 } from "react-native";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Colors from "@/constants/Colors";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ResizeMode } from "expo-av";
+import { Video, ResizeMode } from "expo-av";
 import VideoPlayer from "expo-video-player";
 import CourseList from "@/data/courses.json";
 import { useCourses } from "@/context/CourseContext";
+import { setStatusBarHidden } from 'expo-status-bar';
+import VideoHeader from "@/components/VideoHeader";
 
 export default function VideoScreen() {
   const router = useRouter();
+  const [inFullscreen, setInFullscreen] = useState(false);
+  const videoRef = useRef<Video>(null);
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  
   const { id, chapter: chapterId } = useLocalSearchParams<{
     id: string;
     chapter: string;
   }>();
   const { isEnrolled } = useCourses();
-  const [isPortrait, setIsPortrait] = useState(true);
 
   // Find the course and current chapter
   const course = CourseList.find((c) => c.id === Number(id));
@@ -32,14 +37,34 @@ export default function VideoScreen() {
   );
 
   useEffect(() => {
-    // Check if user is enrolled
+    // Check enrollment
     if (course && !isEnrolled(course.id)) {
       router.push({
-        pathname: '/(screens)/enroll',
-        params: { id: course.id.toString() }
+        pathname: "/(screens)/enroll",
+        params: { id: course.id.toString() },
       });
     }
   }, [course, id]);
+
+  const enterFullscreen = async () => {
+    setStatusBarHidden(true, 'fade');
+    setInFullscreen(true);
+  };
+
+  const exitFullscreen = async () => {
+    setStatusBarHidden(false, 'fade');
+    setInFullscreen(false);
+  };
+
+  const handleChapterPress = useCallback(
+    (nextChapterId: number) => {
+      router.setParams({
+        id: course?.id.toString(),
+        chapter: nextChapterId.toString(),
+      });
+    },
+    [course, router]
+  );
 
   if (!course || !currentChapter) {
     return (
@@ -51,138 +76,122 @@ export default function VideoScreen() {
     );
   }
 
-  const handleChapterPress = useCallback((nextChapterId: number) => {
-    // Instead of using router.push, we'll update the URL without a full reload
-    router.setParams({ 
-      id: course?.id.toString(), 
-      chapter: nextChapterId.toString() 
-    });
-  }, [course, router]);
-
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Video Player */}
-      <View style={styles.videoContainer}>
-        <VideoPlayer
-          key={currentChapter?.id} // Add key to force player reload when chapter changes
-          videoProps={{
-            shouldPlay: true,
-            resizeMode: ResizeMode.CONTAIN,
-            source: {
-              uri: currentChapter?.videoUrl || "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4",
-            },
-          }}
-          style={{
-            videoBackgroundColor: 'black',
-            height: undefined,
-            width: undefined,
-          }}
-          slider={{
-            visible: true,
-          }}
-          timeVisible={true}
-          defaultControlsVisible={true}
+      {/* Video Section */}
+      <View style={styles.videoSection}>
+        {/* Custom Header */}
+        <VideoHeader 
+          title={currentChapter.title}
+          inFullscreen={inFullscreen}
         />
+
+        {/* Video Player */}
+        <View style={styles.videoContainer}>
+          <VideoPlayer
+            videoProps={{
+              shouldPlay: true,
+              resizeMode: ResizeMode.CONTAIN,
+              source: {
+                uri: currentChapter?.videoUrl || 
+                  "https://media.w3.org/2010/05/sintel/trailer.mp4",
+              },
+              ref: videoRef,
+            }}
+            fullscreen={{
+              inFullscreen,
+              enterFullscreen,
+              exitFullscreen,
+            }}
+            style={{
+              videoBackgroundColor: 'black',
+              height: inFullscreen ? screenHeight : 220,
+              width: screenWidth,
+            }}
+            slider={{
+              visible: true,
+              minimumTrackTintColor: Colors.tintColor,
+              maximumTrackTintColor: Colors.gray,
+              thumbTintColor: Colors.tintColor,
+            }}
+            timeVisible={true}
+            textStyle={{
+              color: Colors.white,
+              fontSize: 12,
+            }}
+          />
+        </View>
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Chapter Title */}
-        <View style={styles.chapterHeader}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={24}
-              color={Colors.white}
-            />
-          </TouchableOpacity>
-          <View style={styles.titleContainer}>
+      {!inFullscreen && (
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Course Info */}
+          <View style={styles.courseInfo}>
             <Text style={styles.courseTitle}>{course.name}</Text>
             <Text style={styles.chapterTitle}>{currentChapter.title}</Text>
           </View>
-        </View>
 
-        {/* Chapters List */}
-        <View style={styles.chaptersContainer}>
-          <Text style={styles.sectionTitle}>Course Content</Text>
-          {course.chapters.map((chapter) => (
-            <TouchableOpacity
-              key={chapter.id}
-              style={[
-                styles.chapterCard,
-                chapter.id === currentChapter.id && styles.activeChapter,
-              ]}
-              onPress={() => handleChapterPress(chapter.id)}
-            >
-              <View style={styles.chapterInfo}>
-                <MaterialCommunityIcons
-                  name={
-                    chapter.id === currentChapter.id
-                      ? "play-circle"
-                      : "play-circle-outline"
-                  }
-                  size={24}
-                  color={
-                    chapter.id === currentChapter.id
-                      ? Colors.tintColor
-                      : Colors.white
-                  }
-                />
-                <Text
-                  style={[
-                    styles.chapterText,
-                    chapter.id === currentChapter.id &&
-                      styles.activeChapterText,
-                  ]}
-                >
-                  {chapter.title}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
+          {/* Chapters List */}
+          <View style={styles.chaptersContainer}>
+            <Text style={styles.sectionTitle}>Course Content</Text>
+            {course.chapters.map((chapter) => (
+              <TouchableOpacity
+                key={chapter.id}
+                style={[
+                  styles.chapterCard,
+                  chapter.id === currentChapter.id && styles.activeChapter,
+                ]}
+                onPress={() => handleChapterPress(chapter.id)}
+              >
+                <View style={styles.chapterInfo}>
+                  <MaterialCommunityIcons
+                    name={
+                      chapter.id === currentChapter.id
+                        ? "play-circle"
+                        : "play-circle-outline"
+                    }
+                    size={24}
+                    color={
+                      chapter.id === currentChapter.id
+                        ? Colors.tintColor
+                        : Colors.white
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.chapterText,
+                      chapter.id === currentChapter.id && styles.activeChapterText,
+                    ]}
+                  >
+                    {chapter.title}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.black,
   },
+  videoSection: {
+    backgroundColor: Colors.black,
+  },
   videoContainer: {
-    width: "100%",
-    aspectRatio: 16 / 9,
-    backgroundColor: "#000",
+    width: '100%',
+    backgroundColor: Colors.black,
   },
-  video: {
-    width: "100%",
-    height: "100%",
-  },
-  content: {
-    flex: 1,
-  },
-  chapterHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+  courseInfo: {
     padding: 20,
-    gap: 15,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.gray,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  titleContainer: {
-    flex: 1,
   },
   courseTitle: {
     color: Colors.white,

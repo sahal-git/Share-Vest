@@ -3,6 +3,8 @@ export interface ExpenseType {
     name: string;
     amount: number;
     percentage: number;
+    category: 'housing' | 'investment' | 'entertainment';
+    icon: string;
 }
 
 export interface CourseType {
@@ -21,6 +23,7 @@ export interface CourseType {
 export interface ChapterType {
   id: number;
   title: string;
+  videoUrl?: string;  
 }
 
 interface NewsItem {

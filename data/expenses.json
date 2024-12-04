@@ -2,37 +2,25 @@
     {
         "id": 1,
         "name": "Housing",
-        "amount": 1200.50,
-        "percentage": 40
-    },
-    {
-        "id": 4,
-        "name": "Investments",
-        "amount": 200.60,
-        "percentage": 7
-    },
-    {
-        "id": 6,
-        "name": "Savings",
-        "amount": 400.35,
-        "percentage": 13
+        "amount": 0,
+        "percentage": 0,
+        "category": "housing",
+        "icon": "home"
     },
     {
         "id": 2,
-        "name": "Food",
-        "amount": 600.75,
-        "percentage": 20
+        "name": "Investments",
+        "amount": 0,
+        "percentage": 0,
+        "category": "investment",
+        "icon": "trending-up"
     },
     {
         "id": 3,
-        "name": "Travel",
-        "amount": 300.25,
-        "percentage": 10
-    },
-    {
-        "id": 5,
         "name": "Entertainment",
-        "amount": 300.80,
-        "percentage": 10
+        "amount": 0,
+        "percentage": 0,
+        "category": "entertainment",
+        "icon": "movie"
     }
 ]
