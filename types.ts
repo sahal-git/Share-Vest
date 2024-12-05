@@ -21,6 +21,7 @@ export interface CourseType {
 export interface ChapterType {
   id: number;
   title: string;
+  videoUrl?: string;
 }
 
 interface NewsItem {

@@ -4,15 +4,13 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
   Platform,
 } from "react-native";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import Colors from "@/constants/Colors";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ResizeMode } from "expo-av";
-import VideoPlayer from "expo-video-player";
+import WebView from "react-native-webview";
 import CourseList from "@/data/courses.json";
 import { useCourses } from "@/context/CourseContext";
 
@@ -23,7 +21,6 @@ export default function VideoScreen() {
     chapter: string;
   }>();
   const { isEnrolled } = useCourses();
-  const [isPortrait, setIsPortrait] = useState(true);
 
   // Find the course and current chapter
   const course = CourseList.find((c) => c.id === Number(id));
@@ -32,7 +29,6 @@ export default function VideoScreen() {
   );
 
   useEffect(() => {
-    // Check if user is enrolled
     if (course && !isEnrolled(course.id)) {
       router.push({
         pathname: '/(screens)/enroll',
@@ -52,12 +48,20 @@ export default function VideoScreen() {
   }
 
   const handleChapterPress = useCallback((nextChapterId: number) => {
-    // Instead of using router.push, we'll update the URL without a full reload
     router.setParams({ 
       id: course?.id.toString(), 
       chapter: nextChapterId.toString() 
     });
   }, [course, router]);
+
+  // Extract Vimeo ID from URL
+  const getVimeoId = (url?: string) => {
+    if (!url) return null;
+    const match = url.match(/(?:vimeo.com\/)(\d+)/);
+    return match ? match[1] : null;
+  };
+
+  const vimeoId = getVimeoId(currentChapter?.videoUrl);
 
   return (
     <View style={styles.container}>
@@ -65,29 +69,23 @@ export default function VideoScreen() {
 
       {/* Video Player */}
       <View style={styles.videoContainer}>
-        <VideoPlayer
-          key={currentChapter?.id} // Add key to force player reload when chapter changes
-          videoProps={{
-            shouldPlay: true,
-            resizeMode: ResizeMode.CONTAIN,
-            source: {
-              uri: currentChapter?.videoUrl || "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4",
-            },
-          }}
-          style={{
-            videoBackgroundColor: 'black',
-            height: undefined,
-            width: undefined,
-          }}
-          slider={{
-            visible: true,
-          }}
-          timeVisible={true}
-          defaultControlsVisible={true}
-        />
+        {vimeoId ? (
+          <WebView
+            style={styles.video}
+            source={{
+              uri: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
+            }}
+            allowsFullscreenVideo
+            allowsInlineMediaPlayback
+          />
+        ) : (
+          <View style={styles.noVideoContainer}>
+            <Text style={styles.noVideoText}>No video available</Text>
+          </View>
+        )}
       </View>
 
-      {/* Content */}
+      {/* Rest of your existing content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Chapter Title */}
         <View style={styles.chapterHeader}>
@@ -150,6 +148,7 @@ export default function VideoScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -161,8 +160,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   video: {
-    width: "100%",
-    height: "100%",
+    flex: 1,
+    backgroundColor: 'black',
   },
   content: {
     flex: 1,
@@ -235,6 +234,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   errorText: {
+    color: Colors.white,
+    fontSize: 16,
+    opacity: 0.7,
+  },
+  noVideoContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noVideoText: {
     color: Colors.white,
     fontSize: 16,
     opacity: 0.7,
