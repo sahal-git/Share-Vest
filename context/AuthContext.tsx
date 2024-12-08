@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isLoggedIn: boolean;
-  signUp: (name: string, email: string, password: string) => Promise<boolean>;
+  signUp: (name: string, email: string, password: string, phone: string, avatar: string) => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<boolean>;
@@ -41,7 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (name: string, email: string, password: string) => {
+  const signUp = async (
+    name: string, 
+    email: string, 
+    password: string, 
+    phone: string, 
+    avatar: string
+  ) => {
     try {
       const users = await getUsers();
       if (users.some(u => u.email === email)) {
@@ -53,6 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name,
         email,
         password,
+        phone,
+        avatar,
         createdAt: new Date().toISOString(),
       };
 
