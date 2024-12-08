@@ -39,6 +39,9 @@ export const getTotalExpenses = async (userId: string) => {
   return 0;
 };
 
+const MIN_CARD_WIDTH = 120; // Minimum width for expense cards
+const MAX_CARD_WIDTH = 160; // Maximum width for expense cards
+
 export default function ExpenseBlock({
   onAddExpense,
   onUpdateExpense,
@@ -235,6 +238,16 @@ export default function ExpenseBlock({
     return brightness > 155 ? Colors.black : Colors.white;
   };
 
+  const getCardWidth = (name: string = "") => {
+    // Calculate approximate text width (rough estimation)
+    const textLength = name.length;
+    const estimatedWidth = Math.min(
+      MAX_CARD_WIDTH,
+      Math.max(MIN_CARD_WIDTH, textLength * 8) // 8 pixels per character as estimation
+    );
+    return estimatedWidth;
+  };
+
   const renderItem: ListRenderItem<Partial<ExpenseType>> = ({
     item,
     index,
@@ -242,7 +255,7 @@ export default function ExpenseBlock({
     if (index === 0)
       return (
         <TouchableOpacity onPress={() => handleExpensePress()}>
-          <View style={styles.AddItemButton}>
+          <View style={[styles.AddItemButton, { width: MIN_CARD_WIDTH }]}>
             <Feather name="plus" size={24} color={"#ccc"} />
           </View>
         </TouchableOpacity>
@@ -251,6 +264,7 @@ export default function ExpenseBlock({
     const amount = item.amount?.toFixed(2).split(".");
     const backgroundColor = getBackgroundColor(item.name);
     const textColor = getTextColor(backgroundColor, item.name || "");
+    const cardWidth = getCardWidth(item.name);
 
     const formatPercentage = (percentage: number | undefined) => {
       if (!percentage) return "0.00%";
@@ -261,8 +275,25 @@ export default function ExpenseBlock({
 
     return (
       <TouchableOpacity onPress={() => handleExpensePress(item as ExpenseType)}>
-        <View style={[styles.ExpenseBlock, { backgroundColor }]}>
-          <Text style={[styles.ExpenseBlockText1, { color: textColor }]}>
+        <View 
+          style={[
+            styles.ExpenseBlock, 
+            { 
+              backgroundColor,
+              width: cardWidth
+            }
+          ]}
+        >
+          <Text 
+            style={[
+              styles.ExpenseBlockText1, 
+              { 
+                color: textColor,
+                numberOfLines: 1,
+                ellipsizeMode: 'tail'
+              }
+            ]}
+          >
             {item.name}
           </Text>
           <Text style={[styles.ExpenseBlockText2, { color: textColor }]}>
@@ -288,8 +319,10 @@ export default function ExpenseBlock({
         renderItem={renderItem}
         horizontal
         showsHorizontalScrollIndicator={false}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        snapToInterval={MIN_CARD_WIDTH + 20} // Add snapping behavior
       />
-
       <ExpenseModal
         visible={modalVisible}
         onClose={() => {
@@ -308,18 +341,18 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   ExpenseBlock: {
-    backgroundColor: Colors.tintColor,
-    width: 120,
     padding: 15,
     borderRadius: 15,
     marginRight: 20,
     gap: 10,
+    height: 120, // Fixed height
     alignItems: "flex-start",
     justifyContent: "space-between",
   },
   ExpenseBlockText1: {
     color: Colors.white,
     fontSize: 14,
+    width: '100%', // Allow text to use full width
   },
   ExpenseBlockText2: {
     color: Colors.white,
@@ -337,7 +370,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   AddItemButton: {
-    flex: 1,
+    height: 120, // Match ExpenseBlock height
     borderWidth: 2,
     borderColor: "#666",
     borderStyle: "dashed",
