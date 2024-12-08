@@ -17,6 +17,7 @@ export interface CourseType {
   duration?: string;
   completed?: boolean;
   chapters?: ChapterType[];
+  published?: boolean;
 }
 
 export interface ChapterType {

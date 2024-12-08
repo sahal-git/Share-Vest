@@ -68,58 +68,20 @@ export default function EnrollScreen() {
   };
 
   const handleEnrollPress = () => {
-    try {
-      if (!course) return;
+    if (!course.published) {
+      Alert.alert(
+        'Coming Soon!',
+        'Stay tuned! This course will be available soon.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
 
-      if (!isEnrolled(course.id)) {
-        Alert.alert(
-          "Enroll in Course",
-          "Would you like to enroll in this course?",
-          [
-            {
-              text: "Cancel",
-              style: "cancel",
-            },
-            {
-              text: "Enroll",
-              onPress: () => {
-                enrollInCourse(course.id);
-                Alert.alert(
-                  "Success",
-                  "You have successfully enrolled in this course!",
-                  [
-                    {
-                      text: "Start Learning",
-                      onPress: () => {
-                        if (course.chapters?.length > 0) {
-                          router.replace({
-                            pathname: "(screens)/video",
-                            params: {
-                              id: course.id,
-                              chapter: course.chapters[0].id,
-                            },
-                          });
-                        }
-                      },
-                    },
-                  ]
-                );
-              },
-            },
-          ]
-        );
-      } else if (course.chapters?.length > 0) {
-        router.replace({
-          pathname: "(screens)/video",
-          params: {
-            id: course.id,
-            chapter: course.chapters[0].id,
-          },
-        });
-      }
-    } catch (error) {
-      console.error('Error in handleEnrollPress:', error);
-      Alert.alert('Error', 'Failed to enroll in course. Please try again.');
+    if (!isEnrolled(course.id)) {
+      enrollInCourse(course.id);
+      router.push(`/(screens)/video/${course.chapters?.[0].id}`);
+    } else {
+      router.push(`/(screens)/video/${course.chapters?.[0].id}`);
     }
   };
 
@@ -231,11 +193,22 @@ export default function EnrollScreen() {
           style={[
             styles.enrollButton,
             isEnrolled(course.id) && styles.enrolledButton,
+            !course.published && styles.comingSoonButton
           ]}
           onPress={handleEnrollPress}
         >
-          <Text style={styles.enrollButtonText}>
-            {isEnrolled(course.id) ? "Continue Learning" : "Enroll Now"}
+          <Text 
+            style={[
+              styles.enrollButtonText,
+              !course.published && styles.comingSoonButtonText
+            ]}
+          >
+            {!course.published 
+              ? "Coming Soon" 
+              : isEnrolled(course.id) 
+                ? "Continue Learning" 
+                : "Enroll Now"
+            }
           </Text>
         </TouchableOpacity>
       </View>
@@ -396,12 +369,25 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.tintColor,
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  enrolledButton: {
+    backgroundColor: Colors.gray,
+  },
+  comingSoonButton: {
+    backgroundColor: Colors.black,
+    borderWidth: 1,
+    borderColor: Colors.tintColor,
   },
   enrollButtonText: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
+  },
+  comingSoonButtonText: {
+    color: Colors.tintColor,
   },
   errorContainer: {
     flex: 1,
@@ -412,9 +398,6 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     opacity: 0.7,
-  },
-  enrolledButton: {
-    backgroundColor: Colors.gray,
   },
   enrolledBadge: {
     flexDirection: "row",

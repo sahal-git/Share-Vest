@@ -3,6 +3,7 @@
         "id": 1,
         "name": "Stock Market Basics",
         "imageCode": "FINSsC9P50Y",
+        "published": true,
         "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
         "category": "Beginner",
         "enrolled": true,
@@ -21,6 +22,7 @@
         "id": 2,
         "name": "Halal Investing Guide",
         "imageCode": "jqY2URdUDso",
+        "published": false,
         "imageUrl": "https://i.ytimg.com/vi/jqY2URdUDso/maxresdefault.jpg",
         "category": "Portfolio",
         "chapters": [
@@ -38,9 +40,9 @@
         "id": 3,
         "name": "Ultimate Stock Market Course",
         "imageCode": "Y3kzzE9Elns",
+        "published": false,
         "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
         "category": "Advanced",
-        "enrolled": true,
         "chapters": [
             { "id": 1, "title": "Stock Valuation Models", "videoUrl": "https://vimeo.com/271741409" },
             { "id": 2, "title": "Global Market Impact on Stocks", "videoUrl": "https://vimeo.com/271741409" },
@@ -56,6 +58,7 @@
         "id": 4,
         "name": "Stock Market Basics",
         "imageCode": "FINSsC9P50Y",
+        "published": false,
         "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
         "category": "Trading",
         "chapters": [
@@ -73,6 +76,7 @@
         "id": 5,
         "name": "Ultimate Stock Market Course",
         "imageCode": "Y3kzzE9Elns",
+        "published": true,
         "imageUrl": "https://i.ytimg.com/vi/Y3kzzE9Elns/maxresdefault.jpg",
         "category": "Beginner",
         "chapters": [
@@ -90,9 +94,9 @@
         "id": 6,
         "name": "Halal Stock Investing",
         "imageCode": "mZ5d604Wl4I",
+        "published": false,
         "imageUrl": "https://i.ytimg.com/vi/mZ5d604Wl4I/maxresdefault.jpg",
         "category": "Screening",
-        "enrolled": true,
         "chapters": [
             { "id": 1, "title": "Sector-specific Screening", "videoUrl": "https://vimeo.com/271741409" },
             { "id": 2, "title": "Screening for Dividend Stocks", "videoUrl": "https://vimeo.com/271741409" },
