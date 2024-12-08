@@ -30,16 +30,19 @@ export default function CourseBlock({
   showTags?: boolean;
 }) {
   const router = useRouter();
-  const { isEnrolled } = useCourses();
+  const { isEnrolled, enrolledCourses } = useCourses();
 
   const filteredCourses = courseList.filter((course) => {
     if (text === "Your") {
+      if (enrolledCourses.length === 0) {
+        return course.intro === true;
+      }
       return isEnrolled(course.id);
     }
     if (category) {
       return course.category === category;
     }
-    return true;
+    return !course.intro;
   });
 
   const renderItem: ListRenderItem<CourseType> = ({ item }) => {

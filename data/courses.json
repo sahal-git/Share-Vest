@@ -4,9 +4,9 @@
         "name": "Stock Market Basics",
         "imageCode": "FINSsC9P50Y",
         "published": true,
+        "intro": true,
         "imageUrl": "https://i.ytimg.com/vi/FINSsC9P50Y/maxresdefault.jpg",
         "category": "Beginner",
-        "enrolled": true,
         "chapters": [
             { "id": 1, "title": "Stock Market Terminology", "videoUrl": "https://vimeo.com/271741409" },
             { "id": 2, "title": "Basics of Stock Investing", "videoUrl": "https://vimeo.com/271741409" },

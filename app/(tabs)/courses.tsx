@@ -34,7 +34,8 @@ export default function Page() {
       course.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
       selectedCategory === "All" || course.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const isNotIntro = !course.intro;
+    return matchesSearch && matchesCategory && isNotIntro;
   });
 
   return (
