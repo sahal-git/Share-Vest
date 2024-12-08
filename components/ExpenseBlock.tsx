@@ -21,35 +21,36 @@ export default function ExpenseBlock({
   onUpdateExpense?: (expense: Partial<ExpenseType>) => void;
 }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedExpense, setSelectedExpense] = useState<ExpenseType | undefined>();
+  const [selectedExpense, setSelectedExpense] = useState<
+    ExpenseType | undefined
+  >();
   const { user } = useAuth();
   const [expenseList, setExpenseList] = useState<ExpenseType[]>([]);
 
   useEffect(() => {
     if (user?.expenses) {
-      // Convert user expenses to ExpenseType format
       const expenses: ExpenseType[] = [
         {
-          id: '1',
-          name: 'Investments',
+          id: 1,
+          name: "Investments",
           amount: Number(user.expenses.investment),
           percentage: calculatePercentage(Number(user.expenses.investment)),
         },
         {
-          id: '2',
-          name: 'Housing',
+          id: 2,
+          name: "Housing",
           amount: Number(user.expenses.housing),
           percentage: calculatePercentage(Number(user.expenses.housing)),
         },
         {
-          id: '3',
-          name: 'Food',
+          id: 3,
+          name: "Food",
           amount: Number(user.expenses.food),
           percentage: calculatePercentage(Number(user.expenses.food)),
         },
         {
-          id: '4',
-          name: 'Savings',
+          id: 4,
+          name: "Savings",
           amount: Number(user.expenses.saving),
           percentage: calculatePercentage(Number(user.expenses.saving)),
         },
@@ -60,11 +61,10 @@ export default function ExpenseBlock({
 
   const calculatePercentage = (amount: number) => {
     if (!user?.expenses) return 0;
-    const total = Number(user.expenses.investment) +
-                 Number(user.expenses.housing) +
-                 Number(user.expenses.food) +
-                 Number(user.expenses.saving);
-    return (amount / total) * 100;
+    
+    const total = expenseList.reduce((sum, expense) => sum + expense.amount, 0);
+    
+    return total === 0 ? 0 : (amount / total) * 100;
   };
 
   const handleExpensePress = (expense?: ExpenseType) => {
@@ -75,9 +75,56 @@ export default function ExpenseBlock({
   const handleSave = (expense: Partial<ExpenseType>) => {
     if (selectedExpense) {
       onUpdateExpense?.({ ...expense, id: selectedExpense.id });
+      
+      setExpenseList(prevList => 
+        prevList.map(item => 
+          item.id === selectedExpense.id 
+            ? { ...item, ...expense, percentage: calculatePercentage(expense.amount || 0) }
+            : { ...item, percentage: calculatePercentage(item.amount) }
+        )
+      );
     } else {
-      onAddExpense?.(expense);
+      const existingExpense = expenseList.find(
+        item => item.name?.toLowerCase() === expense.name?.toLowerCase()
+      );
+
+      if (existingExpense) {
+        const updatedAmount = (existingExpense.amount || 0) + (expense.amount || 0);
+        const updatedExpense = {
+          ...existingExpense,
+          amount: updatedAmount,
+          percentage: calculatePercentage(updatedAmount)
+        };
+
+        onUpdateExpense?.(updatedExpense);
+        
+        setExpenseList(prevList => 
+          prevList.map(item => 
+            item.id === existingExpense.id 
+              ? updatedExpense
+              : { ...item, percentage: calculatePercentage(item.amount) }
+          )
+        );
+      } else {
+        const newExpense: ExpenseType = {
+          ...expense,
+          id: Math.max(0, ...expenseList.map(e => e.id)) + 1,
+          name: expense.name || '',
+          amount: expense.amount || 0,
+          percentage: calculatePercentage(expense.amount || 0)
+        };
+        
+        onAddExpense?.(newExpense);
+        
+        const updatedList = [...expenseList, newExpense];
+        setExpenseList(updatedList.map(item => ({
+          ...item,
+          percentage: calculatePercentage(item.amount)
+        })) as ExpenseType[]);
+      }
     }
+    setModalVisible(false);
+    setSelectedExpense(undefined);
   };
 
   const sortedExpenses = [...expenseList].sort((a, b) => {
@@ -88,7 +135,7 @@ export default function ExpenseBlock({
 
   const getBackgroundColor = (name: string = "") => {
     const lowercaseName = name.toLowerCase();
-    
+
     switch (lowercaseName) {
       case "investments":
         return Colors.tintColor;
@@ -109,16 +156,19 @@ export default function ExpenseBlock({
       return Colors.white;
     }
 
-    const hex = backgroundColor.replace('#', '');
+    const hex = backgroundColor.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16) || 0;
     const g = parseInt(hex.substr(2, 2), 16) || 0;
     const b = parseInt(hex.substr(4, 2), 16) || 0;
-    
+
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
     return brightness > 155 ? Colors.black : Colors.white;
   };
 
-  const renderItem: ListRenderItem<Partial<ExpenseType>> = ({ item, index }) => {
+  const renderItem: ListRenderItem<Partial<ExpenseType>> = ({
+    item,
+    index,
+  }) => {
     if (index === 0)
       return (
         <TouchableOpacity onPress={() => handleExpensePress()}>
@@ -146,7 +196,8 @@ export default function ExpenseBlock({
             {item.name}
           </Text>
           <Text style={[styles.ExpenseBlockText2, { color: textColor }]}>
-            ₹{amount?.[0]}.<Text style={[styles.ExpenseBlockText2Span, { color: textColor }]}>
+            ₹{amount?.[0]}.
+            <Text style={[styles.ExpenseBlockText2Span, { color: textColor }]}>
               {amount?.[1]}
             </Text>
           </Text>
