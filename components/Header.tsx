@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { capitalizeWords } from '@/utils/text';
 
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=4CAF50&color=fff';
 
@@ -13,6 +14,9 @@ export default function Header() {
   const { user } = useAuth();
 
   if (!user) return null;
+
+  const firstName = user.name.split(' ')[0];
+  const capitalizedName = capitalizeWords(firstName);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -31,7 +35,7 @@ export default function Header() {
 
           <View style={styles.userTextWrapper}>
             <Text style={[styles.userText, styles.greeting]}>
-              Hello, {user.name.split(' ')[0]}
+              Hello, {capitalizedName}
             </Text>
             <Text style={[styles.userText, styles.appName]}>
               <Text style={styles.textBold}>ShareVest</Text> here!

@@ -6,25 +6,66 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useState } from "react";
-import { ExpenseType } from "../types";
+import React, { useState, useEffect } from "react";
 import Colors from "@/constants/Colors";
 import Feather from "@expo/vector-icons/Feather";
 import ExpenseModal from "./ExpenseModal";
+import { useAuth } from "@/context/AuthContext";
+import { ExpenseType } from "@/types";
 
 export default function ExpenseBlock({
-  expenseList,
   onAddExpense,
   onUpdateExpense,
 }: {
-  expenseList: ExpenseType[];
   onAddExpense?: (expense: Partial<ExpenseType>) => void;
   onUpdateExpense?: (expense: Partial<ExpenseType>) => void;
 }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedExpense, setSelectedExpense] = useState<
-    ExpenseType | undefined
-  >();
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseType | undefined>();
+  const { user } = useAuth();
+  const [expenseList, setExpenseList] = useState<ExpenseType[]>([]);
+
+  useEffect(() => {
+    if (user?.expenses) {
+      // Convert user expenses to ExpenseType format
+      const expenses: ExpenseType[] = [
+        {
+          id: '1',
+          name: 'Investments',
+          amount: Number(user.expenses.investment),
+          percentage: calculatePercentage(Number(user.expenses.investment)),
+        },
+        {
+          id: '2',
+          name: 'Housing',
+          amount: Number(user.expenses.housing),
+          percentage: calculatePercentage(Number(user.expenses.housing)),
+        },
+        {
+          id: '3',
+          name: 'Food',
+          amount: Number(user.expenses.food),
+          percentage: calculatePercentage(Number(user.expenses.food)),
+        },
+        {
+          id: '4',
+          name: 'Savings',
+          amount: Number(user.expenses.saving),
+          percentage: calculatePercentage(Number(user.expenses.saving)),
+        },
+      ];
+      setExpenseList(expenses);
+    }
+  }, [user?.expenses]);
+
+  const calculatePercentage = (amount: number) => {
+    if (!user?.expenses) return 0;
+    const total = Number(user.expenses.investment) +
+                 Number(user.expenses.housing) +
+                 Number(user.expenses.food) +
+                 Number(user.expenses.saving);
+    return (amount / total) * 100;
+  };
 
   const handleExpensePress = (expense?: ExpenseType) => {
     setSelectedExpense(expense);
@@ -54,40 +95,20 @@ export default function ExpenseBlock({
       case "savings":
         return Colors.white;
       case "food":
-      case "groceries":
-        return "#FF5722";  // Deep Orange
-      case "entertainment":
-        return "#7B1FA2";  // Material Purple
-      case "shopping":
-        return "#F57C00";  // Material Orange
-      case "travel":
-        return "#FDD835";  // Material Yellow
-      case "personal":
-        return "#C2185B";  // Material Pink
-      case "utilities":
-        return "#0097A7";  // Material Cyan
-      case "healthcare":
-        return "#388E3C";  // Material Green
+        return "#FF5722";
+      case "housing":
+        return "#0097A7";
       default:
         return Colors.blue;
     }
   };
 
   const getTextColor = (backgroundColor: string, name: string) => {
-    // Always use white text for certain categories
-    const whiteTextCategories = [
-      "entertainment",
-      "personal",
-      "healthcare",
-      "utilities",
-      "investments"
-    ];
-
+    const whiteTextCategories = ["investments", "housing"];
     if (whiteTextCategories.includes(name.toLowerCase())) {
       return Colors.white;
     }
 
-    // For other categories, use contrast-based logic
     const hex = backgroundColor.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16) || 0;
     const g = parseInt(hex.substr(2, 2), 16) || 0;
@@ -97,11 +118,8 @@ export default function ExpenseBlock({
     return brightness > 155 ? Colors.black : Colors.white;
   };
 
-  const renderItem: ListRenderItem<Partial<ExpenseType>> = ({
-    item,
-    index,
-  }) => {
-    if (index == 0)
+  const renderItem: ListRenderItem<Partial<ExpenseType>> = ({ item, index }) => {
+    if (index === 0)
       return (
         <TouchableOpacity onPress={() => handleExpensePress()}>
           <View style={styles.AddItemButton}>
@@ -143,7 +161,7 @@ export default function ExpenseBlock({
   };
 
   return (
-    <View style={{ paddingVertical: 20 }}>
+    <View style={styles.container}>
       <FlatList
         data={[{ name: "Add Item" }, ...sortedExpenses]}
         renderItem={renderItem}
@@ -165,6 +183,9 @@ export default function ExpenseBlock({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    paddingVertical: 20,
+  },
   ExpenseBlock: {
     backgroundColor: Colors.tintColor,
     width: 120,
