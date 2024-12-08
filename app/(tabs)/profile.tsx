@@ -5,6 +5,7 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React from "react";
 import Colors from "@/constants/Colors";
@@ -15,12 +16,14 @@ import { useWatchlist } from '@/context/WatchlistContext';
 import { useCourses } from "@/context/CourseContext";
 import CourseList from "@/data/courses.json";
 import { CourseType } from "@/types";
+import { useAuth } from '@/context/AuthContext';
 
 export default function Profile() {
   const router = useRouter();
   const { profile } = useProfile();
   const { watchlist } = useWatchlist();
   const { enrolledCourses } = useCourses();
+  const { signOut } = useAuth();
   
   // Get enrolled courses count directly from context
   const enrolledCoursesCount = enrolledCourses.length;
@@ -32,6 +35,16 @@ export default function Profile() {
   const certificatesCount = CourseList.filter((course) => 
     enrolledCourses.includes(course.id) && course.completed
   ).length;
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.replace('/(screens)/onboarding');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      Alert.alert('Error', 'Failed to logout. Please try again.');
+    }
+  };
 
   return (
     <>
@@ -130,7 +143,10 @@ export default function Profile() {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.menuItem, styles.logoutButton]}>
+            <TouchableOpacity 
+              style={[styles.menuItem, styles.logoutButton]}
+              onPress={handleLogout}
+            >
               <View style={styles.menuLeft}>
                 <MaterialCommunityIcons
                   name="logout"

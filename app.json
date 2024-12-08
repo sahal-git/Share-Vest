@@ -2,6 +2,7 @@
   "expo": {
     "name": "ShareVest",
     "slug": "sharevest",
+    "owner": "sahal.dev",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,11 +16,18 @@
       "**/*"
     ],
     "android": {
-      "package": "com.yourusername.sharevest",
+      "package": "com.yourcompany.sharevest",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
+      },
+      "runtimeVersion": "1.0.0"
+    },
+    "ios": {
+      "bundleIdentifier": "com.yourcompany.sharevest",
+      "runtimeVersion": {
+        "policy": "appVersion"
       }
     },
     "extra": {
@@ -28,7 +36,11 @@
       }
     },
     "plugins": [
-      "expo-video"
-    ]
+      "expo-splash-screen",
+      "expo-font"
+    ],
+    "updates": {
+      "url": "https://u.expo.dev/6926aa06-b7ed-44ea-890f-469761b625bf"
+    }
   }
 }
