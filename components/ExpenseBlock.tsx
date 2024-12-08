@@ -12,52 +12,123 @@ import Feather from "@expo/vector-icons/Feather";
 import ExpenseModal from "./ExpenseModal";
 import { useAuth } from "@/context/AuthContext";
 import { ExpenseType } from "@/types";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const getUserExpenses = async (userId: string) => {
+  try {
+    const storedExpenses = await AsyncStorage.getItem(`userExpenses_${userId}`);
+    if (storedExpenses) {
+      return JSON.parse(storedExpenses) as ExpenseType[];
+    }
+  } catch (error) {
+    console.error('Error loading user expenses:', error);
+  }
+  return null;
+};
+
+export const getTotalExpenses = async (userId: string) => {
+  try {
+    const storedExpenses = await AsyncStorage.getItem(`userExpenses_${userId}`);
+    if (storedExpenses) {
+      const expenses = JSON.parse(storedExpenses) as ExpenseType[];
+      return expenses.reduce((total, expense) => total + (expense.amount || 0), 0);
+    }
+  } catch (error) {
+    console.error('Error loading total expenses:', error);
+  }
+  return 0;
+};
 
 export default function ExpenseBlock({
   onAddExpense,
   onUpdateExpense,
+  onTotalUpdate,
+  expenseList: initialExpenseList,
 }: {
   onAddExpense?: (expense: Partial<ExpenseType>) => void;
   onUpdateExpense?: (expense: Partial<ExpenseType>) => void;
+  onTotalUpdate?: (total: number) => void;
+  expenseList?: ExpenseType[];
 }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<
     ExpenseType | undefined
   >();
   const { user } = useAuth();
-  const [expenseList, setExpenseList] = useState<ExpenseType[]>([]);
+  const [expenseList, setExpenseList] = useState<ExpenseType[]>(initialExpenseList || []);
+
+  const saveExpensesToStorage = async (expenses: ExpenseType[]) => {
+    if (!user?.id) return;
+    
+    try {
+      await AsyncStorage.setItem(`userExpenses_${user.id}`, JSON.stringify(expenses));
+      const total = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+      onTotalUpdate?.(total);
+    } catch (error) {
+      console.error('Error saving expenses:', error);
+    }
+  };
+
+  const loadExpensesFromStorage = async () => {
+    if (!user?.id) return null;
+    
+    try {
+      const storedExpenses = await AsyncStorage.getItem(`userExpenses_${user.id}`);
+      if (storedExpenses) {
+        return JSON.parse(storedExpenses) as ExpenseType[];
+      }
+    } catch (error) {
+      console.error('Error loading expenses:', error);
+    }
+    return null;
+  };
 
   useEffect(() => {
-    if (user?.expenses) {
-      const expenses: ExpenseType[] = [
-        {
-          id: 1,
-          name: "Investments",
-          amount: Number(user.expenses.investment),
-          percentage: calculatePercentage(Number(user.expenses.investment)),
-        },
-        {
-          id: 2,
-          name: "Housing",
-          amount: Number(user.expenses.housing),
-          percentage: calculatePercentage(Number(user.expenses.housing)),
-        },
-        {
-          id: 3,
-          name: "Food",
-          amount: Number(user.expenses.food),
-          percentage: calculatePercentage(Number(user.expenses.food)),
-        },
-        {
-          id: 4,
-          name: "Savings",
-          amount: Number(user.expenses.saving),
-          percentage: calculatePercentage(Number(user.expenses.saving)),
-        },
-      ];
-      setExpenseList(expenses);
-    }
-  }, [user?.expenses]);
+    const initializeExpenses = async () => {
+      if (!user?.id) return;
+
+      const storedExpenses = await loadExpensesFromStorage();
+      
+      if (storedExpenses) {
+        setExpenseList(storedExpenses);
+      } else if (user?.expenses) {
+        const expenses: ExpenseType[] = [
+          {
+            id: 1,
+            name: "Investments",
+            amount: Number(user.expenses.investment),
+            percentage: calculatePercentage(Number(user.expenses.investment)),
+            userId: user.id,
+          },
+          {
+            id: 2,
+            name: "Housing",
+            amount: Number(user.expenses.housing),
+            percentage: calculatePercentage(Number(user.expenses.housing)),
+            userId: user.id,
+          },
+          {
+            id: 3,
+            name: "Food",
+            amount: Number(user.expenses.food),
+            percentage: calculatePercentage(Number(user.expenses.food)),
+            userId: user.id,
+          },
+          {
+            id: 4,
+            name: "Savings",
+            amount: Number(user.expenses.saving),
+            percentage: calculatePercentage(Number(user.expenses.saving)),
+            userId: user.id,
+          },
+        ];
+        setExpenseList(expenses);
+        saveExpensesToStorage(expenses);
+      }
+    };
+
+    initializeExpenses();
+  }, [user?.id, user?.expenses]);
 
   const calculatePercentage = (amount: number) => {
     if (!user?.expenses) return 0;
@@ -72,16 +143,16 @@ export default function ExpenseBlock({
     setModalVisible(true);
   };
 
-  const handleSave = (expense: Partial<ExpenseType>) => {
+  const handleSave = async (expense: Partial<ExpenseType>) => {
+    let updatedList: ExpenseType[];
+    
     if (selectedExpense) {
       onUpdateExpense?.({ ...expense, id: selectedExpense.id });
       
-      setExpenseList(prevList => 
-        prevList.map(item => 
-          item.id === selectedExpense.id 
-            ? { ...item, ...expense, percentage: calculatePercentage(expense.amount || 0) }
-            : { ...item, percentage: calculatePercentage(item.amount) }
-        )
+      updatedList = expenseList.map(item => 
+        item.id === selectedExpense.id 
+          ? { ...item, ...expense, percentage: calculatePercentage(expense.amount || 0) }
+          : { ...item, percentage: calculatePercentage(item.amount) }
       );
     } else {
       const existingExpense = expenseList.find(
@@ -98,12 +169,10 @@ export default function ExpenseBlock({
 
         onUpdateExpense?.(updatedExpense);
         
-        setExpenseList(prevList => 
-          prevList.map(item => 
-            item.id === existingExpense.id 
-              ? updatedExpense
-              : { ...item, percentage: calculatePercentage(item.amount) }
-          )
+        updatedList = expenseList.map(item => 
+          item.id === existingExpense.id 
+            ? updatedExpense
+            : { ...item, percentage: calculatePercentage(item.amount) }
         );
       } else {
         const newExpense: ExpenseType = {
@@ -115,14 +184,15 @@ export default function ExpenseBlock({
         };
         
         onAddExpense?.(newExpense);
-        
-        const updatedList = [...expenseList, newExpense];
-        setExpenseList(updatedList.map(item => ({
+        updatedList = [...expenseList, newExpense].map(item => ({
           ...item,
           percentage: calculatePercentage(item.amount)
-        })) as ExpenseType[]);
+        })) as ExpenseType[];
       }
     }
+
+    setExpenseList(updatedList);
+    await saveExpensesToStorage(updatedList);
     setModalVisible(false);
     setSelectedExpense(undefined);
   };

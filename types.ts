@@ -3,6 +3,7 @@ export interface ExpenseType {
     name: string;
     amount: number;
     percentage: number;
+    userId: string;
 }
 
 export interface CourseType {
