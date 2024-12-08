@@ -11,27 +11,21 @@ import React from "react";
 import Colors from "@/constants/Colors";
 import { Stack, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useProfile } from '@/context/ProfileContext';
 import { useWatchlist } from '@/context/WatchlistContext';
 import { useCourses } from "@/context/CourseContext";
 import CourseList from "@/data/courses.json";
-import { CourseType } from "@/types";
 import { useAuth } from '@/context/AuthContext';
+
+const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=4CAF50&color=fff';
 
 export default function Profile() {
   const router = useRouter();
-  const { profile } = useProfile();
+  const { user, signOut } = useAuth();
   const { watchlist } = useWatchlist();
   const { enrolledCourses } = useCourses();
-  const { signOut } = useAuth();
   
-  // Get enrolled courses count directly from context
   const enrolledCoursesCount = enrolledCourses.length;
-  
-  // Get watchlist count
   const watchlistCount = watchlist.length;
-  
-  // Get certificates count - courses that are both enrolled and completed
   const certificatesCount = CourseList.filter((course) => 
     enrolledCourses.includes(course.id) && course.completed
   ).length;
@@ -46,6 +40,8 @@ export default function Profile() {
     }
   };
 
+  if (!user) return null;
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -56,14 +52,17 @@ export default function Profile() {
             <View style={styles.profileHeader}>
               <View style={styles.imageContainer}>
                 <Image
-                  source={{ uri: profile.avatar }}
+                  source={{ uri: user.avatar || DEFAULT_AVATAR }}
                   style={styles.profileImage}
                 />
                 <View style={styles.imageOverlay} />
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.name}>{profile.name}</Text>
-                <Text style={styles.email}>{profile.email}</Text>
+                <Text style={styles.name}>{user.name}</Text>
+                <Text style={styles.email}>{user.email}</Text>
+                {user.phone && (
+                  <Text style={styles.phone}>{user.phone}</Text>
+                )}
               </View>
             </View>
 
@@ -266,5 +265,11 @@ const styles = StyleSheet.create({
   logoutButton: {
     marginTop: 20,
     marginBottom: 40,
+  },
+  phone: {
+    color: Colors.white,
+    opacity: 0.7,
+    fontSize: 14,
+    marginTop: 4,
   },
 });

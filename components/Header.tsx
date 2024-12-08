@@ -4,26 +4,36 @@ import Colors from "@/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useProfile } from '@/context/ProfileContext';
+import { useAuth } from '@/context/AuthContext';
+
+const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=4CAF50&color=fff';
 
 export default function Header() {
   const router = useRouter();
-  const { profile } = useProfile();
+  const { user } = useAuth();
+
+  if (!user) return null;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.wrapper}>
         <View style={styles.userInfoWrapper}>
-          <Image
-            source={{ uri: profile.avatar }}
-            style={styles.userImg}
-          />
+          <TouchableOpacity 
+            onPress={() => router.push('/(tabs)/profile')}
+            style={styles.avatarContainer}
+          >
+            <Image
+              source={{ uri: user.avatar || DEFAULT_AVATAR }}
+              style={styles.userImg}
+            />
+            <View style={styles.avatarBorder} />
+          </TouchableOpacity>
 
           <View style={styles.userTextWrapper}>
-            <Text style={[styles.userText, { fontSize: 12 }]}>
-              Hello, {profile.name}
+            <Text style={[styles.userText, styles.greeting]}>
+              Hello, {user.name.split(' ')[0]}
             </Text>
-            <Text style={[styles.userText, { fontSize: 16 }]}>
+            <Text style={[styles.userText, styles.appName]}>
               <Text style={styles.textBold}>ShareVest</Text> here!
             </Text>
           </View>
@@ -62,29 +72,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  avatarContainer: {
+    position: 'relative',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  },
   userImg: {
     width: 50,
     height: 50,
-    borderRadius: 50,
+    borderRadius: 25,
+  },
+  avatarBorder: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderRadius: 27,
+    borderWidth: 2,
+    borderColor: Colors.tintColor,
   },
   userTextWrapper: {
-    marginLeft: 10,
+    justifyContent: 'center',
   },
-  btnWrapper: {
-    borderColor: Colors.white,
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 10,
-  },
-  btnText: {
-    color: Colors.white,
+  greeting: {
     fontSize: 12,
+    opacity: 0.7,
+    marginBottom: 2,
   },
-  textBold: {
-    fontWeight: "bold",
+  appName: {
+    fontSize: 16,
   },
   userText: {
     color: Colors.white,
+  },
+  textBold: {
+    fontWeight: "bold",
   },
   btn: {
     borderColor: Colors.white,
@@ -93,5 +118,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
+  },
+  btnText: {
+    color: Colors.white,
+    fontSize: 12,
   },
 });

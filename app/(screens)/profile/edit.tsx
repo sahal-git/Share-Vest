@@ -1,86 +1,98 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image } from "react-native";
-import React, { useState } from "react";
-import Colors from "@/constants/Colors";
-import { Stack, useRouter } from "expo-router";
-import SubScreenHeader from "@/components/SubScreenHeader";
-import { useProfile } from '@/context/ProfileContext';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
+import React, { useState } from 'react';
+import Colors from '@/constants/Colors';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
+import SubScreenHeader from '@/components/SubScreenHeader';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=4CAF50&color=fff';
 
 export default function EditProfile() {
   const router = useRouter();
-  const { profile, updateProfile } = useProfile();
-  const [formData, setFormData] = useState(profile);
+  const { user, updateProfile } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      alert('Sorry, we need camera roll permissions to change your profile picture!');
-      return;
-    }
+  const handleImagePick = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setFormData(prev => ({ ...prev, avatar: result.assets[0].uri }));
+      if (!result.canceled) {
+        const success = await updateProfile({ avatar: result.assets[0].uri });
+        if (!success) {
+          Alert.alert('Error', 'Failed to update profile picture');
+        }
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image');
     }
   };
 
-  const handleSave = () => {
-    updateProfile(formData);
-    router.back();
+  const handleSave = async () => {
+    if (!name.trim()) {
+      Alert.alert('Error', 'Name is required');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const success = await updateProfile({ name, phone });
+      if (success) {
+        Alert.alert('Success', 'Profile updated successfully');
+        router.back();
+      } else {
+        Alert.alert('Error', 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'An error occurred while updating profile');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
       <SubScreenHeader title="Edit Profile" />
-
+      
       <View style={styles.content}>
         <View style={styles.avatarSection}>
-          <View style={styles.avatarContainer}>
-            <Image 
-              source={{ uri: formData.avatar }} 
+          <TouchableOpacity 
+            style={styles.avatarContainer}
+            onPress={handleImagePick}
+          >
+            <Image
+              source={{ uri: user?.avatar || DEFAULT_AVATAR }}
               style={styles.avatar}
             />
-            <TouchableOpacity 
-              style={styles.editAvatarButton}
-              onPress={pickImage}
-            >
-              <MaterialCommunityIcons 
-                name="camera" 
-                size={20} 
-                color={Colors.white} 
+            <View style={styles.editAvatarButton}>
+              <MaterialCommunityIcons
+                name="camera"
+                size={18}
+                color={Colors.white}
               />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.changePhotoText}>Change Photo</Text>
         </View>
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Name</Text>
           <TextInput
             style={styles.input}
-            value={formData.name}
-            onChangeText={(text) => setFormData({ ...formData, name: text })}
-            placeholderTextColor={Colors.gray}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.email}
-            onChangeText={(text) => setFormData({ ...formData, email: text })}
-            keyboardType="email-address"
-            placeholderTextColor={Colors.gray}
+            value={name}
+            onChangeText={setName}
+            placeholder="Enter your name"
+            placeholderTextColor="#666"
           />
         </View>
 
@@ -88,15 +100,22 @@ export default function EditProfile() {
           <Text style={styles.label}>Phone</Text>
           <TextInput
             style={styles.input}
-            value={formData.phone}
-            onChangeText={(text) => setFormData({ ...formData, phone: text })}
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Enter your phone number"
+            placeholderTextColor="#666"
             keyboardType="phone-pad"
-            placeholderTextColor={Colors.gray}
           />
         </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Save Changes</Text>
+        <TouchableOpacity 
+          style={[styles.saveButton, isLoading && styles.saveButtonDisabled]}
+          onPress={handleSave}
+          disabled={isLoading}
+        >
+          <Text style={styles.saveButtonText}>
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -169,5 +188,8 @@ const styles = StyleSheet.create({
     color: Colors.tintColor,
     fontSize: 16,
     fontWeight: '500',
+  },
+  saveButtonDisabled: {
+    backgroundColor: Colors.gray,
   },
 }); 

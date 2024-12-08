@@ -9,6 +9,7 @@ interface AuthContextType {
   signUp: (name: string, email: string, password: string) => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -115,8 +116,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      if (!user) return false;
+
+      // Get all users
+      const users = await getUsers();
+      const userIndex = users.findIndex(u => u.id === user.id);
+      
+      if (userIndex === -1) return false;
+
+      // Update user data
+      const updatedUser = {
+        ...users[userIndex],
+        ...data,
+      };
+
+      // Update users list
+      users[userIndex] = updatedUser;
+      await AsyncStorage.setItem('users', JSON.stringify(users));
+
+      // Update current user
+      setUser(updatedUser);
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+
+      return true;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, isLoggedIn, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      isLoggedIn, 
+      signUp, 
+      signIn, 
+      signOut,
+      updateProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );
