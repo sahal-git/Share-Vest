@@ -67,7 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       users.push(newUser);
       await AsyncStorage.setItem('users', JSON.stringify(users));
       
-      // Don't automatically log in after signup
       setUser(null);
       await AsyncStorage.removeItem('user');
       await AsyncStorage.setItem('isLoggedIn', 'false');
@@ -170,4 +169,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext); 
+export const useAuth = () => useContext(AuthContext);

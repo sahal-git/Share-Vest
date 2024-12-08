@@ -76,7 +76,7 @@ export default function Onboarding() {
         }
         router.replace('/(tabs)');
       } else {
-        success = await signUp(name, email, password, phone, avatar);
+        success = await signUp(name, email, password);
         if (!success) {
           Alert.alert('Error', 'Email already exists');
           return;

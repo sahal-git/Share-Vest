@@ -69,14 +69,35 @@ export default function Profile() {
             {/* Stats Section */}
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <MaterialCommunityIcons
+                    name="book-open-page-variant"
+                    size={24}
+                    color={Colors.tintColor}
+                  />
+                </View>
                 <Text style={styles.statNumber}>{enrolledCoursesCount}</Text>
                 <Text style={styles.statLabel}>Enrolled Courses</Text>
               </View>
               <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <MaterialCommunityIcons
+                    name="bookmark"
+                    size={24}
+                    color={Colors.tintColor}
+                  />
+                </View>
                 <Text style={styles.statNumber}>{watchlistCount}</Text>
                 <Text style={styles.statLabel}>Watchlist</Text>
               </View>
               <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <MaterialCommunityIcons
+                    name="certificate"
+                    size={24}
+                    color={Colors.tintColor}
+                  />
+                </View>
                 <Text style={styles.statNumber}>{certificatesCount}</Text>
                 <Text style={styles.statLabel}>Certificates</Text>
               </View>
@@ -227,11 +248,20 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
   },
+  statIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
   statNumber: {
     color: Colors.white,
     fontSize: 20,
     fontWeight: "600",
-    marginTop: 8,
+    marginTop: 4,
   },
   statLabel: {
     color: Colors.white,
@@ -241,7 +271,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   menuSection: {
-    marginTop: 30,
+    marginTop: 40,
     paddingHorizontal: 20,
   },
   menuItem: {
