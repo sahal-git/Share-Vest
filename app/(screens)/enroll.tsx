@@ -85,6 +85,25 @@ export default function EnrollScreen() {
     }
   };
 
+  const handleEnroll = () => {
+    // Enroll in the course
+    enrollInCourse(course.id);
+    
+    // Show success alert
+    Alert.alert(
+      "Success!",
+      "Course enrolled successfully",
+      [
+        {
+          text: "OK",
+          onPress: () => {
+            // Stay on the same page, don't navigate
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -188,30 +207,26 @@ export default function EnrollScreen() {
       </ScrollView>
 
       {/* Enroll Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.enrollButton,
-            isEnrolled(course.id) && styles.enrolledButton,
-            !course.published && styles.comingSoonButton
-          ]}
-          onPress={handleEnrollPress}
-        >
-          <Text 
+      {!isEnrolled(course.id) && (
+        <View style={styles.footer}>
+          <TouchableOpacity
             style={[
-              styles.enrollButtonText,
-              !course.published && styles.comingSoonButtonText
+              styles.enrollButton,
+              !course.published && styles.comingSoonButton
             ]}
+            onPress={handleEnroll}
           >
-            {!course.published 
-              ? "Coming Soon" 
-              : isEnrolled(course.id) 
-                ? "Continue Learning" 
-                : "Enroll Now"
-            }
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <Text 
+              style={[
+                styles.enrollButtonText,
+                !course.published && styles.comingSoonButtonText
+              ]}
+            >
+              {!course.published ? "Coming Soon" : "Enroll Now"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -372,9 +387,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-  },
-  enrolledButton: {
-    backgroundColor: Colors.gray,
+    opacity: 1,
   },
   comingSoonButton: {
     backgroundColor: Colors.black,
