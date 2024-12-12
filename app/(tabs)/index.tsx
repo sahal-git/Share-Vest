@@ -26,13 +26,21 @@ export default function Page() {
 
       // Load user's expenses
       const userExpenses = await getUserExpenses(user.id);
-      if (userExpenses) {
-        setExpenses(userExpenses);
+      if (userExpenses && userExpenses.length > 0) {
+        // Recalculate percentages when loading expenses
+        const totalAmount = userExpenses.reduce(
+          (sum, expense) => sum + expense.amount,
+          0
+        );
+        
+        const expensesWithPercentages = userExpenses.map(expense => ({
+          ...expense,
+          percentage: Math.round((expense.amount / totalAmount) * 100)
+        }));
+        
+        setExpenses(expensesWithPercentages);
+        setTotalExpenses(totalAmount);
       }
-
-      // Load total expenses
-      const total = await getTotalExpenses(user.id);
-      setTotalExpenses(total);
     };
 
     loadUserData();
@@ -104,10 +112,12 @@ export default function Page() {
 
   const pieData = expenses.map((expense) => {
     const bgColor = getBackgroundColor(expense.name);
+    const percentage = expense.percentage || Math.round((expense.amount / totalExpenses) * 100);
+    
     return {
-      value: expense.percentage,
+      value: expense.amount,
       color: bgColor,
-      text: `${expense.percentage}%`,
+      text: `${percentage}%`,
       textColor: getTextColor(bgColor),
       focused: expense.name === "Investments",
       gradientCenterColor:
@@ -188,6 +198,10 @@ export default function Page() {
     );
   };
 
+  const shouldShowPieChart = () => {
+    return expenses.length > 0 && expenses.some(exp => exp.amount > 0);
+  };
+
   return (
     <>
       <Stack.Screen
@@ -219,38 +233,50 @@ export default function Page() {
               </Text>
             </View>
             <View style={{ paddingVertical: 20, alignItems: "center" }}>
-              <PieChart
-                data={pieData}
-                donut
-                showGradient
-                sectionAutoFocus
-                radius={70}
-                innerRadius={55}
-                semiCircle
-                innerCircleColor={Colors.black}
-                centerLabelComponent={() => {
-                  const investmentExp = expenses.find(
-                    (exp) => exp.name === "Investments"
-                  );
-                  const centerValue = investmentExp?.percentage || 0;
+              {shouldShowPieChart() ? (
+                <PieChart
+                  data={pieData}
+                  donut
+                  showGradient
+                  sectionAutoFocus
+                  radius={70}
+                  innerRadius={55}
+                  semiCircle
+                  innerCircleColor={Colors.black}
+                  centerLabelComponent={() => {
+                    const investmentExp = expenses.find(
+                      (exp) => exp.name === "Investments"
+                    );
+                    const centerValue = investmentExp?.percentage || 0;
 
-                  return (
-                    <View
-                      style={{ justifyContent: "center", alignItems: "center" }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 22,
-                          color: "white",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {centerValue}%
-                      </Text>
-                    </View>
-                  );
-                }}
-              />
+                    return (
+                      <View style={{ justifyContent: "center", alignItems: "center" }}>
+                        <Text
+                          style={{
+                            fontSize: 22,
+                            color: "white",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {centerValue}%
+                        </Text>
+                      </View>
+                    );
+                  }}
+                />
+              ) : (
+                <View style={{ 
+                  width: 140, 
+                  height: 70, 
+                  justifyContent: "center", 
+                  alignItems: "center",
+                  backgroundColor: Colors.black 
+                }}>
+                  <Text style={{ color: Colors.white, textAlign: 'center' }}>
+                    Add expenses to see chart
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
           <ExpenseBlock
