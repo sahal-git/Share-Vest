@@ -1,6 +1,5 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Alert, ScrollView, Image } from 'react-native';
 import React, { useState } from 'react';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import Colors from '@/constants/Colors';
@@ -156,13 +155,14 @@ export default function Onboarding() {
             entering={FadeInUp.delay(200).duration(1000)}
             style={styles.logoContainer}
           >
-            <View style={styles.logo}>
-              <MaterialCommunityIcons 
-                name="chart-line" 
-                size={50} 
-                color={Colors.white} 
-              />
-            </View>
+            <Image 
+              source={require('../../assets/images/logo.png')} 
+              style={{
+                width: 100,
+                height: 100,
+                resizeMode: 'contain'
+              }}
+            />
             <Text style={styles.appName}>ShareVest</Text>
             <Text style={styles.tagline}>Islamic Investment Learning</Text>
           </Animated.View>
