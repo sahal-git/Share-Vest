@@ -1,25 +1,47 @@
 import { StyleSheet, Text, View, ScrollView } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Colors from "@/constants/Colors";
 import { PieChart } from "react-native-gifted-charts";
 import { Stack } from "expo-router";
 import Header from "@/components/Header";
 import ExpenseBlock from "@/components/ExpenseBlock";
-import ExpenseList from "@/data/expenses.json";
 import CourseList from "@/data/courses.json";
 import CourseBlock from "@/components/CourseBlock";
 import StockBlock from "@/components/StockBlock";
 import StockList from "@/data/stocks.json";
 import { ExpenseType } from "@/types";
 import { LinearGradient } from "expo-linear-gradient";
+import { getUserExpenses, getTotalExpenses } from '@/components/ExpenseBlock';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from "@/context/AuthContext";
 
 export default function Page() {
-  const [expenses, setExpenses] = useState(ExpenseList);
+  const [expenses, setExpenses] = useState<ExpenseType[]>([]);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const { user } = useAuth();
 
-  const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + expense.amount,
-    0
-  );
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user?.id) return;
+
+      // Load user's expenses
+      const userExpenses = await getUserExpenses(user.id);
+      if (userExpenses) {
+        setExpenses(userExpenses);
+      }
+
+      // Load total expenses
+      const total = await getTotalExpenses(user.id);
+      setTotalExpenses(total);
+    };
+
+    loadUserData();
+  }, [user?.id]);
+
+  const handleTotalUpdate = (newTotal: number) => {
+    setTotalExpenses(newTotal);
+  };
+
   const formattedTotal = totalExpenses.toFixed(2).split(".");
 
   const categoryTotals = expenses.reduce((acc, expense) => {
@@ -110,38 +132,60 @@ export default function Page() {
     }));
   };
 
-  const handleAddExpense = (newExpense: Partial<ExpenseType>) => {
+  const handleAddExpense = async (newExpense: Partial<ExpenseType>) => {
+    if (!user?.id) return;
+
     const existingExpenseIndex = expenses.findIndex(
-      (exp) => exp.name.toLowerCase() === newExpense.name?.toLowerCase()
+      (exp) => exp.name?.toLowerCase() === newExpense.name?.toLowerCase()
     );
 
+    let updatedExpenses: ExpenseType[];
+
     if (existingExpenseIndex !== -1) {
-      const updatedExpenses = [...expenses];
+      updatedExpenses = [...expenses];
       const existingExpense = updatedExpenses[existingExpenseIndex];
       updatedExpenses[existingExpenseIndex] = {
         ...existingExpense,
-        amount: existingExpense.amount + (newExpense.amount || 0),
+        amount: (existingExpense.amount || 0) + (newExpense.amount || 0),
       };
-      setExpenses(recalculateAllPercentages(updatedExpenses));
     } else {
       const expense = {
         ...newExpense,
-        id: expenses.length + 1,
+        id: Math.max(0, ...expenses.map(e => e.id)) + 1,
+        userId: user.id,
         percentage: calculatePercentage(newExpense.amount || 0),
       } as ExpenseType;
 
-      const updatedExpenses = [...expenses, expense];
-      setExpenses(recalculateAllPercentages(updatedExpenses));
+      updatedExpenses = [...expenses, expense];
     }
+
+    const recalculatedExpenses = recalculateAllPercentages(updatedExpenses);
+    setExpenses(recalculatedExpenses);
+    
+    // Save to AsyncStorage
+    await AsyncStorage.setItem(
+      `userExpenses_${user.id}`,
+      JSON.stringify(recalculatedExpenses)
+    );
   };
 
-  const handleUpdateExpense = (updatedExpense: Partial<ExpenseType>) => {
+  const handleUpdateExpense = async (updatedExpense: Partial<ExpenseType>) => {
+    if (!user?.id) return;
+
     const newExpenses = expenses.map((exp) =>
       exp.id === updatedExpense.id
         ? ({ ...exp, ...updatedExpense } as ExpenseType)
         : exp
     );
-    setExpenses(recalculateAllPercentages(newExpenses));
+    
+    const recalculatedExpenses = recalculateAllPercentages(newExpenses);
+    setExpenses(recalculatedExpenses);
+    
+    // Save to AsyncStorage
+    await AsyncStorage.setItem(
+      `userExpenses_${user.id}`,
+      JSON.stringify(recalculatedExpenses)
+    );
   };
 
   return (
@@ -213,6 +257,7 @@ export default function Page() {
             expenseList={expenses}
             onAddExpense={handleAddExpense}
             onUpdateExpense={handleUpdateExpense}
+            onTotalUpdate={handleTotalUpdate}
           />
           <CourseBlock 
             text="Your" 

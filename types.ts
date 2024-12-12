@@ -3,20 +3,21 @@ export interface ExpenseType {
     name: string;
     amount: number;
     percentage: number;
+    userId: string;
 }
 
-export interface CourseType {
+export type CourseType = {
   id: number;
   name: string;
   imageCode: string;
+  published: boolean;
   imageUrl: string;
   category: string;
   enrolled?: boolean;
-  featured?: boolean;
   duration?: string;
-  completed?: boolean;
-  chapters?: ChapterType[];
-}
+  chapters: ChapterType[];
+  intro?: boolean;
+};
 
 export interface ChapterType {
   id: number;

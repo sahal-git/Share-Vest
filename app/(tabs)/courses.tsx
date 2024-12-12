@@ -34,7 +34,8 @@ export default function Page() {
       course.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
       selectedCategory === "All" || course.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const isNotIntro = !course.intro;
+    return matchesSearch && matchesCategory && isNotIntro;
   });
 
   return (
@@ -153,6 +154,11 @@ const CourseCard = ({ course }: { course: CourseType }) => {
               size={14}
               color={Colors.white}
             />
+          </View>
+        )}
+        {!course.published && (
+          <View style={styles.comingSoonBadge}>
+            <Text style={styles.comingSoonText}>Coming Soon</Text>
           </View>
         )}
       </View>
@@ -352,6 +358,20 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   enrolledText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  comingSoonBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    backgroundColor: Colors.gray,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  comingSoonText: {
     color: Colors.white,
     fontSize: 12,
     fontWeight: "600",

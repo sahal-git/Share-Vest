@@ -1,3 +1,10 @@
+export interface UserExpenses {
+  investment: string;
+  housing: string;
+  food: string;
+  saving: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -5,5 +12,6 @@ export interface User {
   password: string;
   phone?: string;
   avatar?: string;
+  expenses?: UserExpenses;
   createdAt: string;
 } 

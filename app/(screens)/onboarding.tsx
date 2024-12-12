@@ -7,6 +7,7 @@ import Colors from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import AvatarPicker from '@/components/AvatarPicker';
+import { capitalizeWords } from '@/utils/text';
 
 export default function Onboarding() {
   const router = useRouter();
@@ -18,6 +19,12 @@ export default function Onboarding() {
   const [isLoading, setIsLoading] = useState(false);
   const [phone, setPhone] = useState('');
   const [avatar, setAvatar] = useState<string>();
+  const [expenses, setExpenses] = useState({
+    investment: '',
+    housing: '',
+    food: '',
+    saving: '',
+  });
 
   const handleImagePick = async () => {
     try {
@@ -37,14 +44,34 @@ export default function Onboarding() {
     }
   };
 
+  const validateExpenses = () => {
+    const { investment, housing, food, saving } = expenses;
+    if (!investment || !housing || !food || !saving) {
+      Alert.alert('Error', 'Please fill in all expense fields');
+      return false;
+    }
+    // Check if all values are valid numbers
+    const values = [investment, housing, food, saving];
+    if (!values.every(value => !isNaN(Number(value)) && Number(value) >= 0)) {
+      Alert.alert('Error', 'Please enter valid amounts for expenses');
+      return false;
+    }
+    return true;
+  };
+
   const validateInputs = () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return false;
     }
-    if (!isLogin && (!name || !phone)) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return false;
+    if (!isLogin) {
+      if (!name || !phone) {
+        Alert.alert('Error', 'Please fill in all fields');
+        return false;
+      }
+      if (!validateExpenses()) {
+        return false;
+      }
     }
     if (!email.includes('@')) {
       Alert.alert('Error', 'Please enter a valid email');
@@ -69,14 +96,22 @@ export default function Onboarding() {
       let success;
       
       if (isLogin) {
-        success = await signIn(email, password);
+        success = await signIn(email.toLowerCase(), password);
         if (!success) {
           Alert.alert('Error', 'Invalid email or password');
           return;
         }
         router.replace('/(tabs)');
       } else {
-        success = await signUp(name, email, password);
+        const capitalizedName = capitalizeWords(name);
+        success = await signUp(
+          capitalizedName, 
+          email.toLowerCase(), 
+          password,
+          phone,
+          avatar || '',
+          expenses
+        );
         if (!success) {
           Alert.alert('Error', 'Email already exists');
           return;
@@ -168,6 +203,58 @@ export default function Onboarding() {
                     value={phone}
                     onChangeText={setPhone}
                   />
+                </View>
+
+                <View style={styles.expensesSection}>
+                  <Text style={styles.sectionTitle}>Monthly Expenses</Text>
+                  
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Investment Budget</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter amount"
+                      placeholderTextColor="#666"
+                      keyboardType="numeric"
+                      value={expenses.investment}
+                      onChangeText={value => setExpenses(prev => ({ ...prev, investment: value }))}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Housing Expenses</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter amount"
+                      placeholderTextColor="#666"
+                      keyboardType="numeric"
+                      value={expenses.housing}
+                      onChangeText={value => setExpenses(prev => ({ ...prev, housing: value }))}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Food Budget</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter amount"
+                      placeholderTextColor="#666"
+                      keyboardType="numeric"
+                      value={expenses.food}
+                      onChangeText={value => setExpenses(prev => ({ ...prev, food: value }))}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Monthly Savings</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter amount"
+                      placeholderTextColor="#666"
+                      keyboardType="numeric"
+                      value={expenses.saving}
+                      onChangeText={value => setExpenses(prev => ({ ...prev, saving: value }))}
+                    />
+                  </View>
                 </View>
               </>
             )}
@@ -315,5 +402,15 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     opacity: 0.7,
+  },
+  expensesSection: {
+    gap: 16,
+    marginTop: 20,
+  },
+  sectionTitle: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
   },
 }); 
