@@ -82,7 +82,9 @@ export default function CourseBlock({
               {item.name}
             </Text>
             <View style={styles.courseFooter}>
-              <Text style={styles.categoryText}>{item.category}</Text>
+              <Text style={styles.categoryText}>
+                {item.category}
+              </Text>
               {item.duration && (
                 <Text style={styles.durationText}>{item.duration}</Text>
               )}
@@ -174,8 +176,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryText: {
-    color: Colors.tintColor,
     fontSize: 13,
+    fontWeight: '500',
+    color: "#999999",  // Light grey color
   },
   durationText: {
     color: "#999",

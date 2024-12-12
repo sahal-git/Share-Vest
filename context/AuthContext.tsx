@@ -6,7 +6,12 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isLoggedIn: boolean;
-  signUp: (name: string, email: string, password: string, phone: string, avatar: string, expenses: UserExpenses) => Promise<boolean>;
+  signUp: (name: string, email: string, password: string, phone: string, avatar: string, expenses: {
+    investment: string;
+    housing: string;
+    food: string;
+    saving: string;
+  }) => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<boolean>;
@@ -42,14 +47,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (
-    name: string, 
-    email: string, 
+    name: string,
+    email: string,
     password: string,
     phone: string,
     avatar: string,
-    expenses: UserExpenses
+    expenses: {
+      investment: string;
+      housing: string;
+      food: string;
+      saving: string;
+    }
   ) => {
     try {
+      // Convert expense strings to numbers
+      const expenseAmounts = {
+        investment: Number(expenses.investment),
+        housing: Number(expenses.housing),
+        food: Number(expenses.food),
+        saving: Number(expenses.saving)
+      };
+      
+      // Calculate total for percentage calculation
+      const totalExpense = Object.values(expenseAmounts).reduce((sum, amount) => sum + amount, 0);
+
+      // Calculate exact percentages
+      const initialExpenses: ExpenseType[] = [
+        {
+          id: 1,
+          userId: Date.now().toString(),
+          name: "Investments",
+          amount: expenseAmounts.investment,
+          percentage: Math.round((expenseAmounts.investment / totalExpense) * 100)
+        },
+        {
+          id: 2,
+          userId: Date.now().toString(),
+          name: "Housing",
+          amount: expenseAmounts.housing,
+          percentage: Math.round((expenseAmounts.housing / totalExpense) * 100)
+        },
+        {
+          id: 3,
+          userId: Date.now().toString(),
+          name: "Food",
+          amount: expenseAmounts.food,
+          percentage: Math.round((expenseAmounts.food / totalExpense) * 100)
+        },
+        {
+          id: 4,
+          userId: Date.now().toString(),
+          name: "Savings",
+          amount: expenseAmounts.saving,
+          percentage: Math.round((expenseAmounts.saving / totalExpense) * 100)
+        }
+      ];
+
+      // Save initial expenses
+      await AsyncStorage.setItem(
+        `userExpenses_${Date.now().toString()}`, 
+        JSON.stringify(initialExpenses)
+      );
+
       const users = await getUsers();
       if (users.some(u => u.email === email)) {
         return false;
