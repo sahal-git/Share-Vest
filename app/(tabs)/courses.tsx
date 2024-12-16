@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Colors from "@/constants/Colors";
 import { router, Stack, useRouter } from "expo-router";
-import CourseList from "@/data/courses.json";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { CourseType } from "@/types";
 import { useCourses } from "@/context/CourseContext";
@@ -19,6 +19,10 @@ export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [courses, setCourses] = useState<CourseType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const categories = [
     "All",
     "Beginner",
@@ -28,7 +32,24 @@ export default function Page() {
     "Trading",
   ];
 
-  const filteredCourses = CourseList.filter((course) => {
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('https://sharevest.vercel.app/api/courses');
+        const data = await response.json();
+        setCourses(data.data);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        setError('Failed to load courses');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  const filteredCourses = courses.filter((course) => {
     const matchesSearch =
       searchQuery === "" ||
       course.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -37,6 +58,32 @@ export default function Page() {
     const isNotIntro = !course.intro;
     return matchesSearch && matchesCategory && isNotIntro;
   });
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={Colors.tintColor} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => {
+            setLoading(true);
+            setError(null);
+            fetchCourses();
+          }}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -375,5 +422,26 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 12,
     fontWeight: "600",
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
+  errorText: {
+    color: Colors.white,
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: Colors.tintColor,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  retryButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

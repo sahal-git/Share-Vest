@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { CourseType } from '@/types';
-import CourseList from '@/data/courses.json';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
 
@@ -9,15 +8,50 @@ type CourseContextType = {
   unenrollFromCourse: (courseId: number) => void;
   isEnrolled: (courseId: number) => boolean;
   enrolledCourses: number[];
+  courses: CourseType[];
+  isLoading: boolean;
+  error: string | null;
 };
 
 const CourseContext = createContext<CourseContextType | undefined>(undefined);
 
 export function CourseProvider({ children }: { children: React.ReactNode }) {
   const [enrolledCourses, setEnrolledCourses] = useState<number[]>([]);
+  const [courses, setCourses] = useState<CourseType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Load enrolled courses from AsyncStorage when component mounts or user changes
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch('https://sharvest.vercel.app/api/courses');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const { data } = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid API response format');
+        }
+        
+        setCourses(data);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch courses');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Load enrolled courses
   useEffect(() => {
     const loadEnrolledCourses = async () => {
       if (!user?.id) return;
@@ -26,11 +60,6 @@ export function CourseProvider({ children }: { children: React.ReactNode }) {
         const stored = await AsyncStorage.getItem(`enrolledCourses_${user.id}`);
         if (stored) {
           setEnrolledCourses(JSON.parse(stored));
-        } else {
-          // Initialize with courses marked as enrolled in CourseList
-          const initialEnrolled = CourseList.filter(course => course.enrolled).map(course => course.id);
-          setEnrolledCourses(initialEnrolled);
-          await AsyncStorage.setItem(`enrolledCourses_${user.id}`, JSON.stringify(initialEnrolled));
         }
       } catch (error) {
         console.error('Error loading enrolled courses:', error);
@@ -79,7 +108,10 @@ export function CourseProvider({ children }: { children: React.ReactNode }) {
       enrollInCourse, 
       unenrollFromCourse, 
       isEnrolled,
-      enrolledCourses 
+      enrolledCourses,
+      courses,
+      isLoading,
+      error
     }}>
       {children}
     </CourseContext.Provider>

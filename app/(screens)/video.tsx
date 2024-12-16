@@ -5,14 +5,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from "react-native";
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import Colors from "@/constants/Colors";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import WebView from "react-native-webview";
-import CourseList from "@/data/courses.json";
 import { useCourses } from "@/context/CourseContext";
+import { CourseType } from "@/types";
 
 export default function VideoScreen() {
   const router = useRouter();
@@ -20,54 +21,78 @@ export default function VideoScreen() {
     id: string;
     chapter: string;
   }>();
-  const { isEnrolled } = useCourses();
+  const { courses, isLoading, error, isEnrolled } = useCourses();
+  const [currentCourse, setCurrentCourse] = useState<CourseType | null>(null);
 
-  // Find the course and current chapter
-  const course = CourseList.find((c) => c.id === Number(id));
-  const currentChapter = course?.chapters?.find(
+  const fetchCourse = useCallback(async () => {
+    try {
+      const foundCourse = courses.find((c) => c.id === Number(id));
+      setCurrentCourse(foundCourse || null);
+    } catch (error) {
+      console.error('Error setting course:', error);
+    }
+  }, [id, courses]);
+
+  useEffect(() => {
+    fetchCourse();
+  }, [fetchCourse]);
+
+  useEffect(() => {
+    if (currentCourse && !isEnrolled(currentCourse.id)) {
+      router.push({
+        pathname: '/(screens)/enroll',
+        params: { id: currentCourse.id.toString() }
+      });
+    }
+  }, [currentCourse, isEnrolled, router]);
+
+  const currentChapter = currentCourse?.chapters?.find(
     (ch) => ch.id === Number(chapterId)
   );
 
-  useEffect(() => {
-    if (course && !isEnrolled(course.id)) {
-      router.push({
-        pathname: '/(screens)/enroll',
-        params: { id: course.id.toString() }
-      });
-    }
-  }, [course, id]);
-
-  if (!course || !currentChapter) {
+  if (isLoading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Content not found</Text>
-        </View>
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={Colors.tintColor} />
       </View>
     );
   }
 
-  const handleChapterPress = useCallback((nextChapterId: number) => {
+  if (error || !currentCourse || !currentChapter) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>
+          {error || 'Content not found'}
+        </Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={fetchCourse}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const handleChapterPress = (nextChapterId: number) => {
     router.setParams({ 
-      id: course?.id.toString(), 
+      id: currentCourse.id.toString(), 
       chapter: nextChapterId.toString() 
     });
-  }, [course, router]);
+  };
 
-  // Extract Vimeo ID from URL
   const getVimeoId = (url?: string) => {
     if (!url) return null;
     const match = url.match(/(?:vimeo.com\/)(\d+)/);
     return match ? match[1] : null;
   };
 
-  const vimeoId = getVimeoId(currentChapter?.videoUrl);
+  const vimeoId = getVimeoId(currentChapter.videoUrl);
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Video Player */}
       <View style={styles.videoContainer}>
         {vimeoId ? (
           <WebView
@@ -85,9 +110,7 @@ export default function VideoScreen() {
         )}
       </View>
 
-      {/* Rest of your existing content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Chapter Title */}
         <View style={styles.chapterHeader}>
           <TouchableOpacity
             style={styles.backButton}
@@ -100,15 +123,14 @@ export default function VideoScreen() {
             />
           </TouchableOpacity>
           <View style={styles.titleContainer}>
-            <Text style={styles.courseTitle}>{course.name}</Text>
+            <Text style={styles.courseTitle}>{currentCourse.name}</Text>
             <Text style={styles.chapterTitle}>{currentChapter.title}</Text>
           </View>
         </View>
 
-        {/* Chapters List */}
         <View style={styles.chaptersContainer}>
           <Text style={styles.sectionTitle}>Course Content</Text>
-          {course.chapters.map((chapter) => (
+          {currentCourse.chapters.map((chapter) => (
             <TouchableOpacity
               key={chapter.id}
               style={[
@@ -134,8 +156,7 @@ export default function VideoScreen() {
                 <Text
                   style={[
                     styles.chapterText,
-                    chapter.id === currentChapter.id &&
-                      styles.activeChapterText,
+                    chapter.id === currentChapter.id && styles.activeChapterText,
                   ]}
                 >
                   {chapter.title}
@@ -248,5 +269,19 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     opacity: 0.7,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  retryButton: {
+    backgroundColor: Colors.tintColor,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  retryButtonText: {
+    color: Colors.white,
+    fontSize: 16,
   },
 });

@@ -93,23 +93,45 @@ export default function ExpenseBlock({
       const storedExpenses = await loadExpensesFromStorage();
       
       if (storedExpenses) {
-        // Calculate total for percentage calculation
-        const total = storedExpenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
-        
-        // Update percentages
-        const updatedExpenses = storedExpenses.map(expense => ({
-          ...expense,
-          amount: Number(expense.amount),
-          percentage: Math.round((Number(expense.amount) / total) * 100)
-        }));
-        
-        setExpenseList(updatedExpenses);
-        saveExpensesToStorage(updatedExpenses);
+        setExpenseList(storedExpenses);
+      } else if (user?.expenses) {
+        const expenses: ExpenseType[] = [
+          {
+            id: 1,
+            name: "Investments",
+            amount: Number(user.expenses.investment),
+            percentage: calculatePercentage(Number(user.expenses.investment)),
+            userId: user.id,
+          },
+          {
+            id: 2,
+            name: "Housing",
+            amount: Number(user.expenses.housing),
+            percentage: calculatePercentage(Number(user.expenses.housing)),
+            userId: user.id,
+          },
+          {
+            id: 3,
+            name: "Food",
+            amount: Number(user.expenses.food),
+            percentage: calculatePercentage(Number(user.expenses.food)),
+            userId: user.id,
+          },
+          {
+            id: 4,
+            name: "Savings",
+            amount: Number(user.expenses.saving),
+            percentage: calculatePercentage(Number(user.expenses.saving)),
+            userId: user.id,
+          },
+        ];
+        setExpenseList(expenses);
+        saveExpensesToStorage(expenses);
       }
     };
 
     initializeExpenses();
-  }, [user?.id]);
+  }, [user?.id, user?.expenses]);
 
   const calculatePercentage = (amount: number) => {
     if (!user?.expenses) return 0;
@@ -124,46 +146,56 @@ export default function ExpenseBlock({
     setModalVisible(true);
   };
 
-  const calculatePercentages = (expenses: ExpenseType[]) => {
-    const total = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
-    
-    return expenses.map(expense => ({
-      ...expense,
-      amount: Number(expense.amount),
-      percentage: Math.round((Number(expense.amount) / total) * 100)
-    }));
-  };
-
   const handleSave = async (expense: Partial<ExpenseType>) => {
     let updatedList: ExpenseType[];
     
     if (selectedExpense) {
-      // Update existing expense
+      onUpdateExpense?.({ ...expense, id: selectedExpense.id });
+      
       updatedList = expenseList.map(item => 
         item.id === selectedExpense.id 
-          ? { ...item, ...expense, amount: Number(expense.amount) }
-          : item
+          ? { ...item, ...expense, percentage: calculatePercentage(expense.amount || 0) }
+          : { ...item, percentage: calculatePercentage(item.amount) }
       );
     } else {
-      // Add new expense
-      const newExpense = {
-        ...expense,
-        id: Math.max(0, ...expenseList.map(e => e.id)) + 1,
-        amount: Number(expense.amount),
-        userId: user?.id || ''
-      } as ExpenseType;
-      
-      updatedList = [...expenseList, newExpense];
+      const existingExpense = expenseList.find(
+        item => item.name?.toLowerCase() === expense.name?.toLowerCase()
+      );
+
+      if (existingExpense) {
+        const updatedAmount = (existingExpense.amount || 0) + (expense.amount || 0);
+        const updatedExpense = {
+          ...existingExpense,
+          amount: updatedAmount,
+          percentage: calculatePercentage(updatedAmount)
+        };
+
+        onUpdateExpense?.(updatedExpense);
+        
+        updatedList = expenseList.map(item => 
+          item.id === existingExpense.id 
+            ? updatedExpense
+            : { ...item, percentage: calculatePercentage(item.amount) }
+        );
+      } else {
+        const newExpense: ExpenseType = {
+          ...expense,
+          id: Math.max(0, ...expenseList.map(e => e.id)) + 1,
+          name: expense.name || '',
+          amount: expense.amount || 0,
+          percentage: calculatePercentage(expense.amount || 0)
+        };
+        
+        onAddExpense?.(newExpense);
+        updatedList = [...expenseList, newExpense].map(item => ({
+          ...item,
+          percentage: calculatePercentage(item.amount)
+        })) as ExpenseType[];
+      }
     }
 
-    // Recalculate all percentages
-    const recalculatedExpenses = calculatePercentages(updatedList);
-    setExpenseList(recalculatedExpenses);
-    
-    // Save to storage and update parent
-    await saveExpensesToStorage(recalculatedExpenses);
-    onUpdateExpense?.(recalculatedExpenses.find(e => e.name === "Investments"));
-    
+    setExpenseList(updatedList);
+    await saveExpensesToStorage(updatedList);
     setModalVisible(false);
     setSelectedExpense(undefined);
   };
@@ -235,8 +267,10 @@ export default function ExpenseBlock({
     const cardWidth = getCardWidth(item.name);
 
     const formatPercentage = (percentage: number | undefined) => {
-      if (percentage === undefined || isNaN(percentage)) return "0%";
-      return `${Math.round(percentage)}%`;
+      if (!percentage) return "0.00%";
+      if (percentage < 1) return percentage.toFixed(2) + "%";
+      if (percentage < 10) return percentage.toFixed(1) + "%";
+      return Math.round(percentage) + "%";
     };
 
     return (
@@ -251,12 +285,12 @@ export default function ExpenseBlock({
           ]}
         >
           <Text 
-            numberOfLines={1}
-            ellipsizeMode='tail'
             style={[
               styles.ExpenseBlockText1, 
               { 
-                color: textColor
+                color: textColor,
+                numberOfLines: 1,
+                ellipsizeMode: 'tail'
               }
             ]}
           >
@@ -345,16 +379,5 @@ const styles = StyleSheet.create({
     marginRight: 20,
     alignItems: "center",
     justifyContent: "center",
-  },
-  percentageContainer: {
-    backgroundColor: Colors.gray,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  percentageText: {
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: '500',
   },
 });

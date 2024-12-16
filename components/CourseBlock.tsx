@@ -6,6 +6,7 @@ import {
   View,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import React from "react";
 import Colors from "@/constants/Colors";
@@ -17,22 +18,36 @@ import { useCourses } from '@/context/CourseContext';
 export default function CourseBlock({
   text,
   textBold,
-  courseList,
   category,
   showEnrolled = true,
   showTags = true,
 }: {
   text: string;
   textBold?: string;
-  courseList: CourseType[];
   category?: string;
   showEnrolled?: boolean;
   showTags?: boolean;
 }) {
   const router = useRouter();
-  const { isEnrolled, enrolledCourses } = useCourses();
+  const { isEnrolled, enrolledCourses, courses, isLoading, error } = useCourses();
 
-  const filteredCourses = courseList.filter((course) => {
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color={Colors.tintColor} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Failed to load courses</Text>
+      </View>
+    );
+  }
+
+  const filteredCourses = courses.filter((course) => {
     if (text === "Your") {
       if (enrolledCourses.length === 0) {
         return course.intro === true;
@@ -44,6 +59,10 @@ export default function CourseBlock({
     }
     return !course.intro;
   });
+
+  if (filteredCourses.length === 0) {
+    return null;
+  }
 
   const renderItem: ListRenderItem<CourseType> = ({ item }) => {
     return (
@@ -62,6 +81,11 @@ export default function CourseBlock({
               />
             </View>
           )}
+          {!item.published && (
+            <View style={styles.comingSoonBadge}>
+              <Text style={styles.comingSoonText}>Coming Soon</Text>
+            </View>
+          )}
         </View>
         <View style={styles.courseInfo}>
           <View style={styles.courseIcon}>
@@ -71,7 +95,7 @@ export default function CourseBlock({
                 item.category === "Advanced" ? "chart-line" :
                 item.category === "Trading" ? "trending-up" :
                 item.category === "Portfolio" ? "briefcase" :
-                "filter" // for Screening
+                "filter"
               }
               size={24}
               color={Colors.white}
@@ -183,5 +207,30 @@ const styles = StyleSheet.create({
   durationText: {
     color: "#999",
     fontSize: 13,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: Colors.white,
+    opacity: 0.7,
+    fontSize: 14,
+  },
+  comingSoonBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: Colors.tintColor,
+    padding: 4,
+    borderRadius: 12,
+  },
+  comingSoonText: {
+    color: Colors.white,
+    fontSize: 12,
   },
 });

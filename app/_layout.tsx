@@ -4,6 +4,7 @@ import { WatchlistProvider } from '@/context/WatchlistContext';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { CourseProvider } from '@/context/CourseContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { StockProvider } from '@/context/StockContext';
 
 export default function RootLayout() {
   return (
@@ -11,12 +12,14 @@ export default function RootLayout() {
       <ProfileProvider>
         <WatchlistProvider>
           <CourseProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen 
-                name="index"
-                options={{ headerShown: false }}
-              />
-            </Stack>
+            <StockProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen 
+                  name="index"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+            </StockProvider>
           </CourseProvider>
         </WatchlistProvider>
       </ProfileProvider>

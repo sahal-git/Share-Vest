@@ -5,10 +5,8 @@ import { PieChart } from "react-native-gifted-charts";
 import { Stack } from "expo-router";
 import Header from "@/components/Header";
 import ExpenseBlock from "@/components/ExpenseBlock";
-import CourseList from "@/data/courses.json";
 import CourseBlock from "@/components/CourseBlock";
 import StockBlock from "@/components/StockBlock";
-import StockList from "@/data/stocks.json";
 import { ExpenseType } from "@/types";
 import { LinearGradient } from "expo-linear-gradient";
 import { getUserExpenses, getTotalExpenses } from '@/components/ExpenseBlock';
@@ -288,12 +286,9 @@ export default function Page() {
           <CourseBlock 
             text="Your" 
             textBold="Courses" 
-            courseList={CourseList} 
-            showTags={false} 
             showEnrolled={false}
           />
           <StockBlock 
-            stockList={StockList} 
             showFeatured={true}
             showWatchlistButton={true}
           />

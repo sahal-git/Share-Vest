@@ -6,14 +6,14 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import Colors from "@/constants/Colors";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import SubScreenHeader from "@/components/SubScreenHeader";
-import CourseList from "@/data/courses.json";
 import { CourseType } from "@/types";
 import { useCourses } from "@/context/CourseContext";
 
@@ -25,16 +25,36 @@ const isCourseValid = (course: CourseType | undefined): course is CourseType => 
 export default function EnrollScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { enrollInCourse, isEnrolled } = useCourses();
+  const { 
+    courses, 
+    isLoading, 
+    error, 
+    isEnrolled,
+    enrollInCourse
+  } = useCourses();
+  
+  const course = courses.find((c) => c.id === Number(id));
 
-  const course = CourseList.find((c) => c.id === Number(id));
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <SubScreenHeader title="Course Details" />
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={Colors.tintColor} />
+        </View>
+      </View>
+    );
+  }
 
   if (!course || !isCourseValid(course)) {
     return (
       <View style={styles.container}>
         <SubScreenHeader title="Course Details" />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Course not found</Text>
+          <Text style={styles.errorText}>{error || 'Course not found'}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => { }}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -68,6 +88,8 @@ export default function EnrollScreen() {
   };
 
   const handleEnrollPress = () => {
+    if (!course) return;
+
     if (!course.published) {
       Alert.alert(
         'Coming Soon!',
@@ -79,29 +101,19 @@ export default function EnrollScreen() {
 
     if (!isEnrolled(course.id)) {
       enrollInCourse(course.id);
-      router.push(`/(screens)/video/${course.chapters?.[0].id}`);
-    } else {
-      router.push(`/(screens)/video/${course.chapters?.[0].id}`);
-    }
-  };
-
-  const handleEnroll = () => {
-    // Enroll in the course
-    enrollInCourse(course.id);
-    
-    // Show success alert
-    Alert.alert(
-      "Success!",
-      "Course enrolled successfully",
-      [
-        {
-          text: "OK",
-          onPress: () => {
-            // Stay on the same page, don't navigate
+      // Show success alert without navigation
+      Alert.alert(
+        "Success!",
+        "Course enrolled successfully",
+        [
+          {
+            text: "OK",
+            // Remove the navigation, just close the alert
+            onPress: () => {}
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
   };
 
   return (
@@ -178,7 +190,7 @@ export default function EnrollScreen() {
           </Text>
 
           {course.chapters && (
-            <>
+            <React.Fragment>
               <Text style={styles.sectionTitle}>Course Content</Text>
               {course.chapters.map((chapter) => (
                 <TouchableOpacity
@@ -201,7 +213,7 @@ export default function EnrollScreen() {
                   </View>
                 </TouchableOpacity>
               ))}
-            </>
+            </React.Fragment>
           )}
         </View>
       </ScrollView>
@@ -214,7 +226,7 @@ export default function EnrollScreen() {
               styles.enrollButton,
               !course.published && styles.comingSoonButton
             ]}
-            onPress={handleEnroll}
+            onPress={handleEnrollPress}
           >
             <Text 
               style={[
@@ -236,6 +248,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.black,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: Colors.white,
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: Colors.tintColor,
+    padding: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '500',
   },
   content: {
     flex: 1,
@@ -401,16 +440,6 @@ const styles = StyleSheet.create({
   },
   comingSoonButtonText: {
     color: Colors.tintColor,
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorText: {
-    color: Colors.white,
-    fontSize: 16,
-    opacity: 0.7,
   },
   enrolledBadge: {
     flexDirection: "row",

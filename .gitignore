@@ -36,3 +36,6 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Add this line to your .gitignore
+config/google-service-account.ts
