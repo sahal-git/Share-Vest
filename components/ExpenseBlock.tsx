@@ -251,12 +251,12 @@ export default function ExpenseBlock({
           ]}
         >
           <Text 
+            numberOfLines={1}
+            ellipsizeMode='tail'
             style={[
               styles.ExpenseBlockText1, 
               { 
-                color: textColor,
-                numberOfLines: 1,
-                ellipsizeMode: 'tail'
+                color: textColor
               }
             ]}
           >
